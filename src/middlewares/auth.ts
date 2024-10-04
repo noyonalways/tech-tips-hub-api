@@ -1,10 +1,10 @@
 import httpStatus from "http-status";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
-import { TUserRoles } from "../modules/user/user.interface";
+import { TUserRole } from "../modules/user/user.interface";
 import { catchAsync, sendResponse } from "../utils";
 
-const auth = (...requiredRoles: TUserRoles[]) => {
+const auth = (...requiredRoles: TUserRole[]) => {
   return catchAsync(async (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
