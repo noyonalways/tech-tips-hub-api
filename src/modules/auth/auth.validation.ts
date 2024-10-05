@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UserGender } from "../user/user.constant";
 
 const register = z.object({
   body: z
@@ -19,6 +20,16 @@ const register = z.object({
         required_error: "Password is required",
         invalid_type_error: "Password must be string",
       }),
+      gender: z.enum([...UserGender] as [string, ...string[]], {
+        required_error: "Gender is required",
+        invalid_type_error: "Gender must be string",
+      }),
+      dateOfBirth: z
+        .string({
+          required_error: "Date of Birth is required",
+          invalid_type_error: "Date of Birth must be string",
+        })
+        .date("Invalid Date, Expected format: YYYY-MM-DD"),
       profilePicture: z
         .string({
           required_error: "Profile picture is required",

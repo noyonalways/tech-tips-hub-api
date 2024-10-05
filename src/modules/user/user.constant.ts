@@ -1,7 +1,13 @@
-import { TSocialPlatform, TUserRole, TUserStatus } from "./user.interface";
+import {
+  TSocialPlatform,
+  TUserGender,
+  TUserRole,
+  TUserStatus,
+} from "./user.interface";
 
 export const UserRoles: TUserRole[] = ["Admin", "User"];
 export const UserStatus: TUserStatus[] = ["Active", "Blocked"];
+export const UserGender: TUserGender[] = ["Male", "Female", "Other"];
 export const SocialPlatform: TSocialPlatform[] = [
   "Facebook",
   "Instagram",

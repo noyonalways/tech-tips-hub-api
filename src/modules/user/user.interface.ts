@@ -3,6 +3,7 @@ import { Document, Model, Types } from "mongoose";
 
 export type TUserRole = "User" | "Admin";
 export type TUserStatus = "Active" | "Blocked";
+export type TUserGender = "Male" | "Female" | "Other";
 export type TSocialPlatform =
   | "Facebook"
   | "Instagram"
@@ -23,6 +24,7 @@ export interface IUser extends Document {
   designation: string;
   email: string;
   phone: string;
+  gender: TUserGender;
   password: string;
   passwordChangeAt?: Date;
   profilePicture: string;
@@ -31,8 +33,8 @@ export interface IUser extends Document {
   followers: Types.ObjectId[];
   following: Types.ObjectId[];
   socialLinks: TSocialLink[];
-  address: string;
-  dateOfBirth: string;
+  location: string;
+  dateOfBirth: Date;
   isVerified: boolean;
   isPremiumUser: boolean;
   isDeleted: boolean;

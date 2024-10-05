@@ -2,7 +2,12 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { model, Schema } from "mongoose";
 import config from "../../config";
-import { SocialPlatform, UserRoles, UserStatus } from "./user.constant";
+import {
+  SocialPlatform,
+  UserGender,
+  UserRoles,
+  UserStatus,
+} from "./user.constant";
 import { IUser, IUserModel, TSocialLink } from "./user.interface";
 
 const socialLinksSchema = new Schema<TSocialLink>(
@@ -50,7 +55,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: "",
     },
-    address: {
+    location: {
       type: String,
       default: "",
     },
@@ -66,6 +71,14 @@ const userSchema = new Schema<IUser>(
     profilePicture: {
       type: String,
       default: "",
+    },
+    gender: {
+      type: String,
+      enum: {
+        values: UserGender,
+        message: "{VALUE} is not a valid gender",
+      },
+      required: [true, "Gender is required"],
     },
     role: {
       type: String,
@@ -94,8 +107,8 @@ const userSchema = new Schema<IUser>(
       default: [],
     },
     dateOfBirth: {
-      type: String,
-      default: "",
+      type: Date,
+      required: [true, "Date of Birth is required"],
     },
     socialLinks: {
       type: [socialLinksSchema],

@@ -25,4 +25,9 @@ export default {
 
   // hash password
   bcrypt_salt_round: process.env.BCRYPT_SALT_ROUND,
+
+  // cloudinary config
+  cloud_name: process.env.CLOUD_NAME,
+  cloudinary_api_key: process.env.CLOUDINARY_API_KEY,
+  cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET,
 };
