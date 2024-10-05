@@ -31,4 +31,16 @@ authRoutes.put(
   authController.changePassword,
 );
 
+authRoutes.post(
+  "/forget-password",
+  validateRequest(authValidationSchema.forgetPassword),
+  authController.forgetPassword,
+);
+
+authRoutes.post(
+  "/reset-password",
+  validateRequest(authValidationSchema.resetPassword),
+  authController.resetPassword,
+);
+
 export default authRoutes;

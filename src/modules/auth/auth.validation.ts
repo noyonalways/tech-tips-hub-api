@@ -61,8 +61,38 @@ const changePassword = z.object({
     .strict(),
 });
 
+const forgetPassword = z.object({
+  body: z
+    .object({
+      email: z.string({
+        required_error: "Email is required",
+        invalid_type_error: "Email must be a string",
+      }),
+    })
+    .strict(),
+});
+
+const resetPassword = z.object({
+  body: z
+    .object({
+      email: z.string({
+        required_error: "Email is required",
+        invalid_type_error: "Email must be a string",
+      }),
+      newPassword: z
+        .string({
+          required_error: "New password is required",
+          invalid_type_error: "New password must be a string",
+        })
+        .min(6, "New password must be at least 8 characters"),
+    })
+    .strict(),
+});
+
 export const authValidationSchema = {
   register,
   login,
-  changePassword
+  changePassword,
+  forgetPassword,
+  resetPassword,
 };

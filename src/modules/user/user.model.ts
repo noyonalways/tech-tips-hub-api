@@ -154,5 +154,18 @@ userSchema.statics.createToken = function (
   });
 };
 
+userSchema.statics.verifyToken = function (token: string, secret: string) {
+  return jwt.verify(token, secret);
+};
+
+userSchema.statics.isJWTIssuedBeforePasswordChanged = function (
+  passwordChangedTimestamp: Date,
+  jwtIssuedTimestamp: number,
+) {
+  const passwordChangedTime =
+    new Date(passwordChangedTimestamp).getTime() / 1000;
+  return passwordChangedTime > jwtIssuedTimestamp;
+};
+
 const User = model<IUser, IUserModel>("User", userSchema);
 export default User;

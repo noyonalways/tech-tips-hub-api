@@ -1,5 +1,6 @@
 import httpStatus from "http-status";
 import config from "../../config";
+import { AppError } from "../../errors";
 import { catchAsync, sendResponse } from "../../utils";
 import { authService } from "./auth.service";
 
@@ -54,9 +55,43 @@ const changePassword = catchAsync(async (req, res) => {
   });
 });
 
+// forget password
+const forgetPassword = catchAsync(async (req, res) => {
+  const { email } = req.body;
+
+  const result = await authService.forgetPassword(email);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password reset link sent successfully",
+    data: result,
+  });
+});
+
+// reset password
+const resetPassword = catchAsync(async (req, res) => {
+  const token = req.headers?.authorization?.split(" ")[1];
+
+  if (!token) {
+    throw new AppError(httpStatus.FORBIDDEN, "Access Forbidden");
+  }
+
+  const result = await authService.resetPassword(req.body, token);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password reset successfully",
+    data: result,
+  });
+});
+
 export const authController = {
   register,
   login,
   getMe,
   changePassword,
+  forgetPassword,
+  resetPassword,
 };

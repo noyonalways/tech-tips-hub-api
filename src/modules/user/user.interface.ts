@@ -39,17 +39,26 @@ export interface IUser extends Document {
 }
 
 export interface IUserModel extends Model<IUser> {
+  generateHashPassword(
+    plainTextPassword: string,
+    saltRound?: number,
+  ): Promise<string>;
+
   isPasswordMatch(
     plainTextPassword: string,
     hashedPassword: string,
   ): Promise<boolean>;
+
   createToken(
     jwtPayload: JwtPayload,
     secret: string,
     expiresIn: string,
   ): string;
-  generateHashPassword(
-    plainTextPassword: string,
-    saltRound?: number,
-  ): Promise<string>;
+
+  verifyToken(token: string, secret: string): JwtPayload;
+
+  isJWTIssuedBeforePasswordChanged(
+    passwordChangedTimestamp: Date,
+    jwtIssuedTimestamp: number,
+  ): boolean;
 }
