@@ -31,7 +31,32 @@ const login = catchAsync(async (req, res) => {
   });
 });
 
+// get me (current logged in user)
+const getMe = catchAsync(async (req, res) => {
+  const user = await authService.getMe(req.user);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User fetched successfully",
+    data: user,
+  });
+});
+
+// change password (current logged in user)
+const changePassword = catchAsync(async (req, res) => {
+  const result = await authService.changePassword(req.user, req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password changed successfully",
+    data: result,
+  });
+});
+
 export const authController = {
   register,
   login,
+  getMe,
+  changePassword,
 };

@@ -60,6 +60,9 @@ const userSchema = new Schema<IUser>(
       minlength: [6, "Password must be at least 6 characters"],
       select: 0,
     },
+    passwordChangeAt: {
+      type: Date,
+    },
     profilePicture: {
       type: String,
       default: "",
@@ -133,6 +136,12 @@ userSchema.statics.isPasswordMatch = function (
   hashedPassword,
 ) {
   return bcrypt.compare(plainTextPassword, hashedPassword);
+};
+
+userSchema.statics.generateHashPassword = async function (
+  plainTextPassword: string,
+) {
+  return await bcrypt.hash(plainTextPassword, Number(config.bcrypt_salt_round));
 };
 
 userSchema.statics.createToken = function (

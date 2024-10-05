@@ -44,7 +44,25 @@ const login = z.object({
     .strict(),
 });
 
+const changePassword = z.object({
+  body: z
+    .object({
+      oldPassword: z.string({
+        invalid_type_error: "Old password must be a string",
+        required_error: "Old password is required",
+      }),
+      newPassword: z
+        .string({
+          invalid_type_error: "New password must be a string",
+          required_error: "New password is required",
+        })
+        .min(6, "New password must be at least 8 characters"),
+    })
+    .strict(),
+});
+
 export const authValidationSchema = {
   register,
   login,
+  changePassword
 };

@@ -1,7 +1,9 @@
 import httpStatus from "http-status";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
+import { AppError } from "../errors";
 import { TUserRole } from "../modules/user/user.interface";
+import User from "../modules/user/user.model";
 import { catchAsync, sendResponse } from "../utils";
 
 const auth = (...requiredRoles: TUserRole[]) => {
@@ -24,10 +26,10 @@ const auth = (...requiredRoles: TUserRole[]) => {
     const { email, role } = decoded;
 
     // check the use is exists or not
-    // const user = await User.isUserExists("email", email);
-    // if (!user) {
-    //   throw new AppError(httpStatus.NOT_FOUND, "User not found");
-    // }
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
 
     if (requiredRoles && !requiredRoles.includes(role)) {
       return sendResponse(res, {
@@ -38,7 +40,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
       });
     }
 
-    // req.user = decoded;
+    req.user = decoded;
     next();
   });
 };

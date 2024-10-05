@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { validateRequest } from "../../middlewares";
+import { USER_ROLE } from "../../constant";
+import { auth, validateRequest } from "../../middlewares";
 import { authController } from "./auth.controller";
 import { authValidationSchema } from "./auth.validation";
 
@@ -15,6 +16,19 @@ authRoutes.post(
   "/login",
   validateRequest(authValidationSchema.login),
   authController.login,
+);
+
+authRoutes.get(
+  "/me",
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  authController.getMe,
+);
+
+authRoutes.put(
+  "/change-password",
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  validateRequest(authValidationSchema.changePassword),
+  authController.changePassword,
 );
 
 export default authRoutes;

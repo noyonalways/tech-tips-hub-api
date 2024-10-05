@@ -24,6 +24,7 @@ export interface IUser extends Document {
   email: string;
   phone: string;
   password: string;
+  passwordChangeAt?: Date;
   profilePicture: string;
   role: TUserRole;
   status: TUserStatus;
@@ -47,4 +48,8 @@ export interface IUserModel extends Model<IUser> {
     secret: string,
     expiresIn: string,
   ): string;
+  generateHashPassword(
+    plainTextPassword: string,
+    saltRound?: number,
+  ): Promise<string>;
 }
