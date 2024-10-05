@@ -89,10 +89,22 @@ const resetPassword = z.object({
     .strict(),
 });
 
+const refreshToken = z.object({
+  cookies: z
+    .object({
+      refreshToken: z.string({
+        invalid_type_error: "Refresh token must be a string",
+        required_error: "Refresh token is required",
+      }),
+    })
+    .strict(),
+});
+
 export const authValidationSchema = {
   register,
   login,
   changePassword,
   forgetPassword,
   resetPassword,
+  refreshToken,
 };

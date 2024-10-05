@@ -211,6 +211,53 @@ const resetPassword = async (
   );
 };
 
+// generate access token using refresh token
+const generateNewAccessToken = async (refreshToken: string) => {
+  const decoded = User.verifyToken(
+    refreshToken,
+    config.jwt_refresh_token_secret as string,
+  );
+
+  // check the use is exist or not
+  const user = await User.findOne({ email: decoded.email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // check the user is already deleted
+  if (user.isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is already deleted");
+  }
+
+  // check the is user status
+  if (user.status === "Blocked") {
+    throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
+  }
+
+  if (
+    user.passwordChangeAt &&
+    User.isJWTIssuedBeforePasswordChanged(
+      user.passwordChangeAt,
+      decoded.iat as number,
+    )
+  ) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized Access");
+  }
+
+  const jwtPayload = {
+    email: user.email,
+    role: user.role,
+  };
+
+  const accessToken = User.createToken(
+    jwtPayload,
+    config.jwt_access_token_secret as string,
+    config.jwt_access_token_expires_in as string,
+  );
+
+  return accessToken;
+};
+
 export const authService = {
   register,
   login,
@@ -218,4 +265,5 @@ export const authService = {
   changePassword,
   forgetPassword,
   resetPassword,
+  generateNewAccessToken,
 };

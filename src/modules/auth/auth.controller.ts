@@ -58,7 +58,6 @@ const changePassword = catchAsync(async (req, res) => {
 // forget password
 const forgetPassword = catchAsync(async (req, res) => {
   const { email } = req.body;
-
   const result = await authService.forgetPassword(email);
 
   sendResponse(res, {
@@ -76,7 +75,6 @@ const resetPassword = catchAsync(async (req, res) => {
   if (!token) {
     throw new AppError(httpStatus.FORBIDDEN, "Access Forbidden");
   }
-
   const result = await authService.resetPassword(req.body, token);
 
   sendResponse(res, {
@@ -87,6 +85,20 @@ const resetPassword = catchAsync(async (req, res) => {
   });
 });
 
+// generate access token via refresh token
+const generateNewAccessToken = catchAsync(async (req, res) => {
+  const { refreshToken } = req.cookies;
+
+  const newAccessToken = await authService.generateNewAccessToken(refreshToken);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Access token retrieved successfully",
+    data: { token: newAccessToken },
+  });
+});
+
 export const authController = {
   register,
   login,
@@ -94,4 +106,5 @@ export const authController = {
   changePassword,
   forgetPassword,
   resetPassword,
+  generateNewAccessToken,
 };

@@ -18,6 +18,12 @@ authRoutes.post(
   authController.login,
 );
 
+authRoutes.post(
+  "/refresh-token",
+  validateRequest(authValidationSchema.refreshToken),
+  authController.generateNewAccessToken,
+);
+
 authRoutes.get(
   "/me",
   auth(USER_ROLE.USER, USER_ROLE.ADMIN),
