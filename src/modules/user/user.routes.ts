@@ -35,4 +35,14 @@ userRouter.put(
   userController.updateSocialLinks,
 );
 
+// block user (admin only)
+userRouter.patch("/:id/block", auth(USER_ROLE.ADMIN), userController.blockUser);
+
+// unblock user (admin only)
+userRouter.patch(
+  "/:id/unblock",
+  auth(USER_ROLE.ADMIN),
+  userController.unBlockUser,
+);
+
 export default userRouter;

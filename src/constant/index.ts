@@ -5,5 +5,5 @@ export const USER_ROLE = {
 
 export const USER_STATUS = {
   ACTIVE: "Active",
-  INACTIVE: "Blocked",
+  BLOCKED: "Blocked",
 };

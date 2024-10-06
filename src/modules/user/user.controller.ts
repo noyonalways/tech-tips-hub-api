@@ -13,8 +13,7 @@ const updateProfile = catchAsync(async (req, res) => {
   });
 });
 
-// update usr profile social links
-
+// update user profile social links
 const updateSocialLinks = catchAsync(async (req, res) => {
   const result = await userService.updateSocialLinks(req.user, req.body);
 
@@ -26,7 +25,36 @@ const updateSocialLinks = catchAsync(async (req, res) => {
   });
 });
 
+// block user (only admin)
+const blockUser = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await userService.blockUser(id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User blocked successfully",
+    data: result,
+  });
+});
+
+const unBlockUser = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await userService.unBlockUser(id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User unblock successfully",
+    data: result,
+  });
+});
+
 export const userController = {
   updateProfile,
   updateSocialLinks,
+  blockUser,
+  unBlockUser,
 };
