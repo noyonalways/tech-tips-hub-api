@@ -13,6 +13,20 @@ const updateProfile = catchAsync(async (req, res) => {
   });
 });
 
+// update usr profile social links
+
+const updateSocialLinks = catchAsync(async (req, res) => {
+  const result = await userService.updateSocialLinks(req.user, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User social links updated successfully",
+    data: result,
+  });
+});
+
 export const userController = {
   updateProfile,
+  updateSocialLinks,
 };

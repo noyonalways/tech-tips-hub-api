@@ -27,4 +27,12 @@ userRouter.patch(
   userController.updateProfile,
 );
 
+// update user profile social links
+userRouter.put(
+  "/profile/update-social-links",
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  validateRequest(userValidationSchema.updateSocialLinks),
+  userController.updateSocialLinks,
+);
+
 export default userRouter;
