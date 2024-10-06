@@ -1,8 +1,11 @@
 import httpStatus from "http-status";
 import { JwtPayload } from "jsonwebtoken";
+import mongoose from "mongoose";
+import { QueryBuilder } from "../../builder";
 import { AppError } from "../../errors";
 import Category from "../category/category.model";
 import User from "../user/user.model";
+import { postSearchableFields } from "./post.constant";
 import { IPost } from "./post.interface";
 import Post from "./post.model";
 import { generateUniqueSlug } from "./post.utils";
@@ -59,6 +62,99 @@ const create = async (userData: JwtPayload, payload: IPost) => {
   }
 };
 
+// get all post (for anyone to see title small part of description, category, views, upvote, downvote etc)
+const getAll = async (query: Record<string, unknown>) => {
+  const postQuery = new QueryBuilder(
+    Post.find({}).populate("author").populate("category"),
+    query,
+  )
+    .search(postSearchableFields)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await postQuery.modelQuery;
+  const meta = await postQuery.countTotal();
+
+  return { result, meta };
+};
+
+// get current logged in user all posts
+const getLoggedInUserPosts = async (
+  userData: JwtPayload,
+  query: Record<string, unknown>,
+) => {
+  const user = await User.findOne({ email: userData.email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const postQuery = new QueryBuilder(
+    Post.find({ author: user._id }).populate("author").populate("category"),
+    query,
+  )
+    .search(postSearchableFields)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await postQuery.modelQuery;
+  const meta = await postQuery.countTotal();
+
+  return { result, meta };
+};
+
+const getPostByProperty = async (key: string, value: string) => {
+  let post;
+
+  if (key === "_id") {
+    if (!mongoose.Types.ObjectId.isValid(value)) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Invalid post Id");
+    }
+    post = await Post.findById(value).populate("author").populate("category");
+  } else {
+    post = await Post.findOne({ [key]: value })
+      .populate("author")
+      .populate("category");
+  }
+
+  if (!post) {
+    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+  }
+
+  return post;
+};
+
+// get single post by id
+const getPremiumSinglePost = async (userData: JwtPayload, id: string) => {
+  const user = await User.findOne({ email: userData.email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (!user.isPremiumUser) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Premium content access only premium members",
+    );
+  }
+
+  // todo: check the premium member is valid or expired
+
+  const post = await Post.findById(id).populate("author").populate("category");
+  if (!post) {
+    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+  }
+
+  return post;
+};
+
 export const postService = {
   create,
+  getAll,
+  getLoggedInUserPosts,
+  getPremiumSinglePost,
+  getPostByProperty,
 };

@@ -26,4 +26,24 @@ postRouter.post(
   postController.create,
 );
 
+// anyone can see all post on the feed
+postRouter.get("/", postController.getAll);
+
+// get single post by post id
+postRouter.get(
+  "/:id",
+  // access only free blog post
+  postController.getFreeSinglePost,
+  auth(USER_ROLE.USER),
+  // access premium blog post
+  postController.getPremiumSinglePost,
+);
+
+// get all current logged in user posts
+postRouter.get(
+  "/my-posts",
+  auth(USER_ROLE.USER),
+  postController.getLoggedInUserPosts,
+);
+
 export default postRouter;
