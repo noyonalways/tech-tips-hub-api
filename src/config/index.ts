@@ -6,6 +6,8 @@ export default {
   port: process.env.PORT,
   database_url: process.env.DATABASE_URL,
   NODE_ENV: process.env.NODE_ENV,
+  api_base_url: process.env.API_BASE_URL,
+  client_base_url: process.env.CLIENT_BASE_URL,
 
   // access and refresh token
   jwt_access_token_secret: process.env.JWT_ACCESS_TOKEN_SECRET,
@@ -30,4 +32,9 @@ export default {
   cloud_name: process.env.CLOUD_NAME,
   cloudinary_api_key: process.env.CLOUDINARY_API_KEY,
   cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET,
+
+  // aamarpay payment gateway
+  aamarpay_gateway_base_url: process.env.AAMARPAY_GATEWAY_BASE_URL,
+  aamarpay_store_id: process.env.AAMARPAY_STORE_ID,
+  aamarpay_signature_key: process.env.AAMARPAY_SIGNATURE_KEY,
 };

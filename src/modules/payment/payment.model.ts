@@ -3,7 +3,6 @@ import {
   PaymentCurrencies,
   PaymentMethods,
   PaymentStatus,
-  SubScriptionTypes,
 } from "./payment.constant";
 import { IPayment } from "./payment.interface";
 
@@ -19,13 +18,18 @@ const paymentSchema = new Schema<IPayment>(
       ref: "User",
       required: [true, "User Id is required"],
     },
+    subscription: {
+      type: Schema.Types.ObjectId,
+      ref: "Subscription",
+      required: [true, "Subscription Id is required"],
+    },
     paymentMethod: {
       type: String,
       enum: {
         values: PaymentMethods,
         message: "{VALUE} is not a valid payment method",
       },
-      required: [true, "PaymentMethods is required"],
+      required: [true, "Payment Method is required"],
     },
     amount: {
       type: Number,
@@ -47,21 +51,9 @@ const paymentSchema = new Schema<IPayment>(
       },
       default: "Pending",
     },
-    subscriptionType: {
-      type: String,
-      enum: {
-        values: SubScriptionTypes,
-        message: "{VALUE} is not a valid subscription type",
-      },
-      default: "Monthly",
-    },
-    paymentDate: {
+    paidAt: {
       type: Date,
-      required: [true, "Payment Date is required"],
-    },
-    expirationDate: {
-      type: Date,
-      required: [true, "Payment Expiration Date is required"],
+      default: null,
     },
   },
   {

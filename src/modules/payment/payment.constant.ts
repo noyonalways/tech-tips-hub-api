@@ -2,14 +2,11 @@ import {
   TPaymentCurrency,
   TPaymentMethod,
   TPaymentStatus,
-  TSubscriptionType,
 } from "./payment.interface";
 
 export const PaymentMethods: TPaymentMethod[] = ["Aamarpay", "Stripe"];
 
 export const PaymentCurrencies: TPaymentCurrency[] = ["BDT", "USD"];
-
-export const SubScriptionTypes: TSubscriptionType[] = ["Monthly", "Annual"];
 
 export const PaymentStatus: TPaymentStatus[] = [
   "Pending",
@@ -17,3 +14,10 @@ export const PaymentStatus: TPaymentStatus[] = [
   "Failed",
   "Canceled",
 ];
+
+export const PAYMENT_STATUS = {
+  PENDING: "Pending",
+  PAID: "Paid",
+  FAILED: "Failed",
+  CANCELED: "Canceled",
+} as const;
