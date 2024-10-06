@@ -27,14 +27,16 @@ const socialLinksSchema = new Schema<TSocialLink>(
   { _id: false },
 );
 
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema<IUser, IUserModel>(
   {
     fullName: {
       type: String,
+      trim: true,
       required: [true, "Full Name is required"],
     },
     username: {
       type: String,
+      trim: true,
       required: [true, "Username is required"],
       unique: true,
     },
@@ -44,15 +46,18 @@ const userSchema = new Schema<IUser>(
     },
     designation: {
       type: String,
+      trim: true,
       default: "",
     },
     email: {
       type: String,
+      trim: true,
       required: [true, "Email is required"],
       unique: true,
     },
     phone: {
       type: String,
+      trim: true,
       default: "",
     },
     location: {
@@ -129,6 +134,16 @@ const userSchema = new Schema<IUser>(
   },
   { timestamps: true },
 );
+
+userSchema.pre("find", function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
+
+userSchema.pre("findOne", function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
 
 userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(
