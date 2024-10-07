@@ -50,6 +50,8 @@ postRouter.get(
 // upvote a post
 // postRouter.put("/:id/upvote", auth(USER_ROLE.USER), postController.upvotePost);
 
+postRouter.put("/:id/vote", auth(USER_ROLE.USER), postController.voteOnPost);
+
 // // downvote a post
 // postRouter.put(
 //   "/:id/downvote",

@@ -70,28 +70,47 @@ const getPremiumSinglePost = catchAsync(async (req, res) => {
 });
 
 // upvote a post
-const upvotePost = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  const { message, post } = await postService.upvotePost(req.user, id);
+// const upvotePost = catchAsync(async (req, res) => {
+//   const { id } = req.params;
+//   await postService.upvotePost(req.user, id);
 
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: message,
-    data: post,
-  });
-});
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: httpStatus.OK,
+//     message: "message",
+//     data: "post",
+//   });
+// });
 
 // downvote a post
-const downvotePost = catchAsync(async (req, res) => {
+// const downvotePost = catchAsync(async (req, res) => {
+//   const { id } = req.params;
+//   const { message, post } = await postService.downvotePost(req.user, id);
+
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: httpStatus.OK,
+//     message: message,
+//     data: post,
+//   });
+// });
+
+// vote
+const voteOnPost = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { message, post } = await postService.downvotePost(req.user, id);
+  const { voteType } = req.query;
+
+  const result = await postService.voteOnPost(
+    req.user,
+    id,
+    voteType as "upvote" | "downvote",
+  );
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: message,
-    data: post,
+    message: "Vote on post successfully updated",
+    data: result,
   });
 });
 
@@ -132,8 +151,7 @@ export const postController = {
   getLoggedInUserPosts,
   getFreeSinglePost,
   getPremiumSinglePost,
-  upvotePost,
-  downvotePost,
+  voteOnPost,
   commentOnPost,
   getAllCommentsByPostId,
 };
