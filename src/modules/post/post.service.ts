@@ -192,10 +192,142 @@ const getPremiumSinglePost = async (userData: JwtPayload, id: string) => {
   return post;
 };
 
+// upvote a post
+export const upvotePost = async (userData: JwtPayload, postId: string) => {
+  // Start a session for transaction handling
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const currentLoggedInUser = await User.findOne({ email: userData.email });
+    if (!currentLoggedInUser) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    // Fetch the post by its ID
+    const post = await Post.findById(postId).session(session);
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Check if the user has already upvoted the post
+    const hasAlreadyUpvoted = post.upvotedBy.includes(currentLoggedInUser._id);
+    const hasAlreadyDownvoted = post.downvotedBy.includes(
+      currentLoggedInUser._id,
+    );
+
+    if (hasAlreadyUpvoted) {
+      // Remove upvote if the user has already upvoted (toggle behavior)
+      post.upVotes -= 1;
+      post.upvotedBy = post.upvotedBy.filter(
+        (userId) => !userId.equals(currentLoggedInUser._id),
+      );
+    } else {
+      // Add upvote
+      post.upVotes += 1;
+      post.upvotedBy.push(currentLoggedInUser._id);
+
+      // If the user had downvoted the post previously, remove the downvote
+      if (hasAlreadyDownvoted) {
+        post.downVotes -= 1;
+        post.downvotedBy = post.downvotedBy.filter(
+          (userId) => !userId.equals(currentLoggedInUser._id),
+        );
+      }
+    }
+
+    // Save the changes
+    await post.save({ session });
+
+    // Commit the transaction and end the session
+    await session.commitTransaction();
+    session.endSession();
+
+    return {
+      message: hasAlreadyUpvoted
+        ? "Upvote removed"
+        : "Post upvoted successfully",
+      post,
+    };
+  } catch (error) {
+    // Abort the transaction in case of error
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+// downvote a post
+export const downvotePost = async (userData: JwtPayload, postId: string) => {
+  // Start a session for transaction handling
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const currentLoggedInUser = await User.findOne({ email: userData.email });
+    if (!currentLoggedInUser) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    // Fetch the post by its ID
+    const post = await Post.findById(postId).session(session);
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Check if the user has already downvoted the post
+    const hasAlreadyDownvoted = post.downvotedBy.includes(
+      currentLoggedInUser._id,
+    );
+    const hasAlreadyUpvoted = post.upvotedBy.includes(currentLoggedInUser._id);
+
+    if (hasAlreadyDownvoted) {
+      // Remove downvote if the user has already downvoted (toggle behavior)
+      post.downVotes -= 1;
+      post.downvotedBy = post.downvotedBy.filter(
+        (userId) => !userId.equals(currentLoggedInUser._id),
+      );
+    } else {
+      // Add downvote
+      post.downVotes += 1;
+      post.downvotedBy.push(currentLoggedInUser._id);
+
+      // If the user had upvoted the post previously, remove the upvote
+      if (hasAlreadyUpvoted) {
+        post.upVotes -= 1;
+        post.upvotedBy = post.upvotedBy.filter(
+          (userId) => !userId.equals(currentLoggedInUser._id),
+        );
+      }
+    }
+
+    // Save the changes
+    await post.save({ session });
+
+    // Commit the transaction and end the session
+    await session.commitTransaction();
+    session.endSession();
+
+    return {
+      message: hasAlreadyDownvoted
+        ? "Downvote removed"
+        : "Post downvoted successfully",
+      post,
+    };
+  } catch (error) {
+    // Abort the transaction in case of error
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
 export const postService = {
   create,
   getAll,
   getLoggedInUserPosts,
   getPremiumSinglePost,
   getPostByProperty,
+  upvotePost,
+  downvotePost,
 };

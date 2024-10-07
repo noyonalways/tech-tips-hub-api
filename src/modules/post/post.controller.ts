@@ -69,10 +69,38 @@ const getPremiumSinglePost = catchAsync(async (req, res) => {
   });
 });
 
+// upvote a post
+const upvotePost = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { message, post } = await postService.upvotePost(req.user, id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: message,
+    data: post,
+  });
+});
+
+// downvote a post
+const downvotePost = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { message, post } = await postService.downvotePost(req.user, id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: message,
+    data: post,
+  });
+});
+
 export const postController = {
   create,
   getAll,
   getLoggedInUserPosts,
   getFreeSinglePost,
   getPremiumSinglePost,
+  upvotePost,
+  downvotePost,
 };

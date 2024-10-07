@@ -62,6 +62,16 @@ const postSchema = new Schema<IPost>({
     type: Number,
     default: 0,
   },
+  upvotedBy: {
+    type: [Schema.Types.ObjectId],
+    ref: "User",
+    default: [],
+  },
+  downvotedBy: {
+    type: [Schema.Types.ObjectId],
+    ref: "User",
+    default: [],
+  },
   comments: {
     type: [Schema.Types.ObjectId],
     ref: "Comment",

@@ -29,6 +29,13 @@ postRouter.post(
 // anyone can see all post on the feed
 postRouter.get("/", postController.getAll);
 
+// get all current logged in user posts
+postRouter.get(
+  "/my-posts",
+  auth(USER_ROLE.USER),
+  postController.getLoggedInUserPosts,
+);
+
 // get single post by post id
 postRouter.get(
   "/:id",
@@ -39,11 +46,14 @@ postRouter.get(
   postController.getPremiumSinglePost,
 );
 
-// get all current logged in user posts
-postRouter.get(
-  "/my-posts",
+// upvote a post
+postRouter.put("/:id/upvote", auth(USER_ROLE.USER), postController.upvotePost);
+
+// downvote a post
+postRouter.put(
+  "/:id/downvote",
   auth(USER_ROLE.USER),
-  postController.getLoggedInUserPosts,
+  postController.downvotePost,
 );
 
 export default postRouter;
