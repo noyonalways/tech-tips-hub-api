@@ -5,6 +5,12 @@ type TResponse<T> = {
   success: boolean;
   message: string;
   data: T;
+  meta?: {
+    limit?: number;
+    total?: number;
+    page?: number;
+    totalPages?: number;
+  };
 };
 
 const sendResponse = <T>(res: Response, responseData: TResponse<T>) => {
@@ -13,6 +19,7 @@ const sendResponse = <T>(res: Response, responseData: TResponse<T>) => {
     statusCode: responseData.statusCode,
     message: responseData.message,
     data: responseData.data,
+    meta: responseData.meta,
   });
 };
 
