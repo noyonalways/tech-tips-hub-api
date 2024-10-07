@@ -72,10 +72,9 @@ const postSchema = new Schema<IPost>({
     ref: "User",
     default: [],
   },
-  comments: {
-    type: [Schema.Types.ObjectId],
-    ref: "Comment",
-    default: [],
+  totalComments: {
+    type: Number,
+    default: 0,
   },
   views: {
     type: Number,

@@ -20,8 +20,8 @@ const getAll = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: "Posts retrieved successfully",
-    data: result,
     meta,
+    data: result,
   });
 });
 
@@ -35,8 +35,8 @@ const getLoggedInUserPosts = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: "Posts retrieved successfully",
-    data: result,
     meta,
+    data: result,
   });
 });
 
@@ -95,6 +95,37 @@ const downvotePost = catchAsync(async (req, res) => {
   });
 });
 
+// comment on post
+const commentOnPost = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await postService.commentOnPost(req.user, id, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.CREATED,
+    message: "Add comment successfully",
+    data: result,
+  });
+});
+
+// get all comments by post id
+const getAllCommentsByPostId = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { result, meta } = await postService.getAllCommentsByPostId(
+    req.user,
+    id,
+    req.query,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Comments retrieved successfully",
+    meta,
+    data: result,
+  });
+});
+
 export const postController = {
   create,
   getAll,
@@ -103,4 +134,6 @@ export const postController = {
   getPremiumSinglePost,
   upvotePost,
   downvotePost,
+  commentOnPost,
+  getAllCommentsByPostId,
 };

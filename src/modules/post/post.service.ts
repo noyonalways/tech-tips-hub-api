@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import { QueryBuilder } from "../../builder";
 import { AppError } from "../../errors";
 import Category from "../category/category.model";
+import { IComment } from "../comment/comment.interface";
+import Comment from "../comment/comment.model";
 import Subscription from "../subscription/subscription.model";
 import User from "../user/user.model";
 import { postSearchableFields } from "./post.constant";
@@ -114,11 +116,25 @@ const getPostByProperty = async (key: string, value: string) => {
     if (!mongoose.Types.ObjectId.isValid(value)) {
       throw new AppError(httpStatus.BAD_REQUEST, "Invalid post Id");
     }
-    post = await Post.findById(value).populate("author").populate("category");
+    post = await Post.findById(value)
+      .populate({
+        path: "author",
+        select: "fullName email profilePicture",
+      })
+      .populate({
+        path: "category",
+        select: "name description postCount",
+      });
   } else {
     post = await Post.findOne({ [key]: value })
-      .populate("author")
-      .populate("category");
+      .populate({
+        path: "author",
+        select: "fullName email profilePicture",
+      })
+      .populate({
+        path: "category",
+        select: "name description postCount",
+      });
   }
 
   if (!post) {
@@ -136,7 +152,16 @@ const getPremiumSinglePost = async (userData: JwtPayload, id: string) => {
   }
 
   // Fetch the post by its ID
-  const post = await Post.findById(id).populate("author").populate("category");
+  const post = await Post.findById(id)
+    .populate({
+      path: "author",
+      select: "fullName email profilePicture",
+    })
+    .populate({
+      path: "category",
+      select: "name description postCount",
+    });
+
   if (!post) {
     throw new AppError(httpStatus.NOT_FOUND, "Post not found");
   }
@@ -193,7 +218,7 @@ const getPremiumSinglePost = async (userData: JwtPayload, id: string) => {
 };
 
 // upvote a post
-export const upvotePost = async (userData: JwtPayload, postId: string) => {
+const upvotePost = async (userData: JwtPayload, postId: string) => {
   // Start a session for transaction handling
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -258,7 +283,7 @@ export const upvotePost = async (userData: JwtPayload, postId: string) => {
 };
 
 // downvote a post
-export const downvotePost = async (userData: JwtPayload, postId: string) => {
+const downvotePost = async (userData: JwtPayload, postId: string) => {
   // Start a session for transaction handling
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -322,6 +347,109 @@ export const downvotePost = async (userData: JwtPayload, postId: string) => {
   }
 };
 
+// comment on post with transaction
+const commentOnPost = async (
+  userData: JwtPayload,
+  postId: string,
+  payload: IComment,
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    // Find the current logged-in user
+    const currentLoggedInUser = await User.findOne({
+      email: userData.email,
+    }).session(session);
+
+    if (!currentLoggedInUser) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    // Fetch the post by its ID
+    const post = await Post.findById(postId).session(session);
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Create a new comment
+    const comment = await Comment.create(
+      [
+        {
+          ...payload,
+          user: currentLoggedInUser._id,
+          post: post._id,
+        },
+      ],
+      { session },
+    );
+
+    // Increment the totalComments field on the post
+    post.totalComments += 1;
+    await post.save({ session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Find and populate the comment with specific fields from user and post
+    return await Comment.findById(comment[0]._id)
+      .populate({
+        path: "user",
+        select: "fullName email profilePicture",
+      })
+      .populate({
+        path: "post",
+        select: "title category slug",
+      });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+// get all comments by post id
+const getAllCommentsByPostId = async (
+  userData: JwtPayload,
+  postId: string,
+  query: Record<string, unknown>,
+) => {
+  const currentLoggedInUser = await User.findOne({ email: userData.email });
+  if (!currentLoggedInUser) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // Fetch the post by its ID
+  const post = await Post.findById(postId);
+  if (!post) {
+    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+  }
+
+  const commentQuery = new QueryBuilder(
+    Comment.find({ post: post._id })
+      .populate({
+        path: "user",
+        select: "fullName email profilePicture", // Select only specific user fields
+      })
+      .populate({
+        path: "post",
+        select: "title category slug", // Select specific post fields
+      }),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await commentQuery.modelQuery;
+  const meta = await commentQuery.countTotal();
+
+  return { result, meta };
+};
+
 export const postService = {
   create,
   getAll,
@@ -330,4 +458,6 @@ export const postService = {
   getPostByProperty,
   upvotePost,
   downvotePost,
+  commentOnPost,
+  getAllCommentsByPostId,
 };

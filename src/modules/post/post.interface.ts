@@ -19,6 +19,6 @@ export interface IPost extends Document {
   downvotedBy: Types.ObjectId[];
   views: number;
   viewedBy: Types.ObjectId[];
-  comments: Types.ObjectId[];
+  totalComments: number;
   isDeleted: boolean;
 }

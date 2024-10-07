@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import { multerUpload } from "../../config/multer.config";
 import { USER_ROLE } from "../../constant";
 import { auth, validateRequest } from "../../middlewares";
+import { commentValidationSchema } from "../comment/comment.validation";
 import { postController } from "./post.controller";
 import { postValidationSchema } from "./post.validation";
 
@@ -54,6 +55,21 @@ postRouter.put(
   "/:id/downvote",
   auth(USER_ROLE.USER),
   postController.downvotePost,
+);
+
+// comment on a post
+postRouter.post(
+  "/:id/comments",
+  auth(USER_ROLE.USER),
+  validateRequest(commentValidationSchema.commentOnPost),
+  postController.commentOnPost,
+);
+
+// get all comments by post id
+postRouter.get(
+  "/:id/comments",
+  auth(USER_ROLE.USER),
+  postController.getAllCommentsByPostId,
 );
 
 export default postRouter;
