@@ -71,6 +71,11 @@ const postSchema = new Schema<IPost>({
     type: Number,
     default: 0,
   },
+  viewedBy: {
+    type: [Schema.Types.ObjectId],
+    ref: "User",
+    default: [],
+  },
   isDeleted: {
     type: Boolean,
     default: false,

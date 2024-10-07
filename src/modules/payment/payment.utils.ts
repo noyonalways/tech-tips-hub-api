@@ -54,7 +54,7 @@ export const initiatePayment = async ({
     fail_url: `${config.api_base_url}/api/v1/payments/failed?transactionId=${transactionId}`,
 
     // it will hit the server /api/v1/payments/cancelled
-    cancel_url: `${config.api_base_url}/api/v1/payments/cancelled?transactionId=${transactionId}`,
+    cancel_url: `${config.api_base_url}/api/v1/payments/canceled?transactionId=${transactionId}`,
     desc: "Lend Money",
     type: "json",
   };

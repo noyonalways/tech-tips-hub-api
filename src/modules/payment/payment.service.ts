@@ -91,9 +91,111 @@ const paymentConfirmation = async (transactionId: string) => {
   }
 };
 
-const paymentFailed = async (transactionId: string) => {};
+const paymentFailed = async (transactionId: string) => {
+  const existingPayment = await Payment.findOne({ transactionId });
+  if (!existingPayment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Payment not found");
+  }
 
-const paymentCancelled = async (transactionId: string) => {};
+  const session = await Payment.startSession();
+
+  try {
+    session.startTransaction();
+
+    // update the payment model status
+    const updatedPayment = await Payment.findOneAndUpdate(
+      { transactionId: transactionId },
+      { status: PAYMENT_STATUS.FAILED },
+      {
+        session,
+        runValidators: true,
+      },
+    );
+
+    if (!updatedPayment) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Filed to update payment");
+    }
+
+    // update the subscription model
+    const updatedBooking = await Subscription.findOneAndUpdate(
+      { transactionId: transactionId },
+      {
+        status: SUBSCRIPTION_STATUS.PENDING,
+      },
+      {
+        session,
+        runValidators: true,
+      },
+    );
+
+    if (!updatedBooking) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Filed to update subscription",
+      );
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
+};
+
+const paymentCancelled = async (transactionId: string) => {
+  const existingPayment = await Payment.findOne({ transactionId });
+  if (!existingPayment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Payment not found");
+  }
+
+  const session = await Payment.startSession();
+
+  try {
+    session.startTransaction();
+
+    // update the payment model status
+    const updatedPayment = await Payment.findOneAndUpdate(
+      { transactionId: transactionId },
+      { status: PAYMENT_STATUS.CANCELED },
+      {
+        session,
+        runValidators: true,
+      },
+    );
+
+    if (!updatedPayment) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Filed to update payment");
+    }
+
+    // update the subscription model
+    const updatedBooking = await Subscription.findOneAndUpdate(
+      { transactionId: transactionId },
+      {
+        status: SUBSCRIPTION_STATUS.PENDING,
+      },
+      {
+        session,
+        runValidators: true,
+      },
+    );
+
+    if (!updatedBooking) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Filed to update subscription",
+      );
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
+};
 
 export const paymentService = {
   paymentConfirmation,

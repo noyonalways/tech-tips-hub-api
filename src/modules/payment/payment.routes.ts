@@ -10,6 +10,6 @@ paymentRouter.post("/confirmation", paymentController.paymentConfirmation);
 paymentRouter.post("/failed", paymentController.paymentFailed);
 
 // payment cancelled
-paymentRouter.get("/cancelled", paymentController.paymentCancelled);
+paymentRouter.get("/canceled", paymentController.paymentCancelled);
 
 export default paymentRouter;

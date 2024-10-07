@@ -28,7 +28,7 @@ const paymentConfirmation = catchAsync(async (req, res) => {
 const paymentFailed = catchAsync(async (req, res) => {
   const { transactionId } = req.query;
 
-  // update the booking paymentStatus and  payment status
+  // update the payment status and subscription status
   await paymentService.paymentFailed(transactionId as string);
 
   res
@@ -41,7 +41,7 @@ const paymentFailed = catchAsync(async (req, res) => {
 const paymentCancelled = catchAsync(async (req, res) => {
   const { transactionId } = req.query;
 
-  // update the booking paymentStatus and  payment status
+  // update the payment status and subscription status
   await paymentService.paymentCancelled(transactionId as string);
 
   res

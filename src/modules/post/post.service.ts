@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { QueryBuilder } from "../../builder";
 import { AppError } from "../../errors";
 import Category from "../category/category.model";
+import Subscription from "../subscription/subscription.model";
 import User from "../user/user.model";
 import { postSearchableFields } from "./post.constant";
 import { IPost } from "./post.interface";
@@ -127,25 +128,65 @@ const getPostByProperty = async (key: string, value: string) => {
   return post;
 };
 
-// get single post by id
+// get premium single post
 const getPremiumSinglePost = async (userData: JwtPayload, id: string) => {
-  const user = await User.findOne({ email: userData.email });
-  if (!user) {
+  const currentLoggedInUser = await User.findOne({ email: userData.email });
+  if (!currentLoggedInUser) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  if (!user.isPremiumUser) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "Premium content access only premium members",
-    );
-  }
-
-  // todo: check the premium member is valid or expired
-
+  // Fetch the post by its ID
   const post = await Post.findById(id).populate("author").populate("category");
   if (!post) {
     throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+  }
+
+  // If the logged-in user is the author of the post, allow access without checking premium status
+  if (post.author._id.equals(currentLoggedInUser._id)) {
+    return post;
+  }
+
+  // If the logged-in user is not the author, check if they are a premium member
+  if (!currentLoggedInUser.isPremiumUser) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Premium content access is only for premium members",
+    );
+  }
+
+  // Fetch the user's current subscription
+  const currentSubscription = await Subscription.findOne({
+    user: currentLoggedInUser._id,
+  });
+
+  // Check if the subscription exists
+  if (!currentSubscription) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You do not have an active subscription. Please subscribe to access premium content.",
+    );
+  }
+
+  // Check if the subscription is active and not expired
+  const currentDate = new Date();
+  if (
+    currentSubscription.status !== "Active" ||
+    currentDate < new Date(currentSubscription.startDate) ||
+    currentDate > new Date(currentSubscription.endDate)
+  ) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Your premium subscription has expired or is not active. Please renew your subscription.",
+    );
+  }
+
+  // Increment the view count only if the user has not viewed this post before
+  const hasViewed = post.viewedBy.includes(currentLoggedInUser._id);
+  if (!hasViewed) {
+    await Post.findByIdAndUpdate(id, {
+      $inc: { views: 1 },
+      $push: { viewedBy: currentLoggedInUser._id },
+    });
   }
 
   return post;

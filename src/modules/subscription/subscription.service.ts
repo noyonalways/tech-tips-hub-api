@@ -7,43 +7,57 @@ import {
   initiatePayment,
 } from "../payment/payment.utils";
 import User from "../user/user.model";
+import { SUBSCRIPTION_STATUS } from "./subscription.constant";
 import { ISubscription } from "./subscription.interface";
 import Subscription from "./subscription.model";
 
 const subscribe = async (userData: JwtPayload, payload: ISubscription) => {
-  const user = await User.findOne({ email: userData.email });
+  const currentLoggedInUser = await User.findOne({ email: userData.email });
 
-  if (!user) {
+  if (!currentLoggedInUser) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  // check the user is already deleted
-  if (user.isDeleted) {
+  // Check if the user is deleted
+  if (currentLoggedInUser.isDeleted) {
     throw new AppError(httpStatus.FORBIDDEN, "User is already deleted");
   }
 
-  // check the is user status
-  if (user.status === "Blocked") {
+  // Check if the user is blocked
+  if (currentLoggedInUser.status === "Blocked") {
     throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
   }
 
-  // check if the user already a premium user
-  if (user.isPremiumUser) {
-    throw new AppError(httpStatus.FORBIDDEN, "User is already a premium user");
+  // Check if the user is already a premium user
+  if (currentLoggedInUser.isPremiumUser) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "User is already a premium member",
+    );
   }
 
-  payload.user = user._id;
+  payload.user = currentLoggedInUser._id;
 
-  // generate transaction id;
+  // Check if there is an existing subscription with a failed or canceled status
+  let subscription = await Subscription.findOne({
+    user: currentLoggedInUser._id,
+    status: {
+      $in: [
+        SUBSCRIPTION_STATUS.PENDING,
+        SUBSCRIPTION_STATUS.CANCELED,
+        SUBSCRIPTION_STATUS.EXPIRED,
+      ],
+    },
+  });
+
   const transactionId = await generateUniqueTransactionId();
   payload.transactionId = transactionId;
 
-  // initiate payment
   const checkoutDetails = await initiatePayment({
-    customerName: user.fullName,
-    customerEmail: user.email,
-    customerPhone: user?.phone || "N/A",
-    address: user.location || "N/A",
+    customerName: currentLoggedInUser.fullName,
+    customerEmail: currentLoggedInUser.email,
+    customerPhone: currentLoggedInUser?.phone || "N/A",
+    address: currentLoggedInUser.location || "N/A",
     amount: payload.price.toString(),
     currency: payload.currency,
     transactionId: transactionId,
@@ -51,7 +65,7 @@ const subscribe = async (userData: JwtPayload, payload: ISubscription) => {
 
   const paymentData = {
     transactionId,
-    user: user._id,
+    user: currentLoggedInUser._id,
     paymentMethod: payload.paymentMethod,
     currency: payload.currency,
     amount: payload.price,
@@ -62,23 +76,39 @@ const subscribe = async (userData: JwtPayload, payload: ISubscription) => {
   try {
     session.startTransaction();
 
-    const subscription = await Subscription.create([{ ...payload }], {
-      session,
-    });
-
-    if (subscription.length < 0) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Failed to create subscription",
+    // If subscription exists, update it
+    if (subscription) {
+      subscription = await Subscription.findOneAndUpdate(
+        { _id: subscription._id },
+        {
+          ...payload,
+          status: SUBSCRIPTION_STATUS.PENDING, // Reset status for new payment attempt
+        },
+        { session, new: true, runValidators: true },
       );
+    } else {
+      // If no previous failed/canceled subscription, create a new one
+      const createdSubscription = await Subscription.create([{ ...payload }], {
+        session,
+      });
+
+      if (!createdSubscription || createdSubscription.length < 1) {
+        throw new AppError(
+          httpStatus.BAD_REQUEST,
+          "Failed to create subscription",
+        );
+      }
+
+      subscription = createdSubscription[0]; // Use the newly created subscription
     }
 
+    // Create payment for the subscription
     const payment = await Payment.create(
-      [{ ...paymentData, subscription: subscription[0]._id }],
+      [{ ...paymentData, subscription: subscription?._id }],
       { session },
     );
 
-    if (payment.length < 0) {
+    if (!payment || payment.length < 1) {
       throw new AppError(httpStatus.BAD_REQUEST, "Failed to create payment");
     }
 
