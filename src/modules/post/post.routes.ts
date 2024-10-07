@@ -48,14 +48,14 @@ postRouter.get(
 );
 
 // upvote a post
-postRouter.put("/:id/upvote", auth(USER_ROLE.USER), postController.upvotePost);
+// postRouter.put("/:id/upvote", auth(USER_ROLE.USER), postController.upvotePost);
 
-// downvote a post
-postRouter.put(
-  "/:id/downvote",
-  auth(USER_ROLE.USER),
-  postController.downvotePost,
-);
+// // downvote a post
+// postRouter.put(
+//   "/:id/downvote",
+//   auth(USER_ROLE.USER),
+//   postController.downvotePost,
+// );
 
 // comment on a post
 postRouter.post(

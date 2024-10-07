@@ -6,12 +6,12 @@ import { AppError } from "../../errors";
 import Category from "../category/category.model";
 import { IComment } from "../comment/comment.interface";
 import Comment from "../comment/comment.model";
-import Subscription from "../subscription/subscription.model";
 import User from "../user/user.model";
+import View from "../view/view.model";
 import { postSearchableFields } from "./post.constant";
 import { IPost } from "./post.interface";
 import Post from "./post.model";
-import { generateUniqueSlug } from "./post.utils";
+import { generateUniqueSlug, isPremiumSubscriptionActive } from "./post.utils";
 
 const create = async (userData: JwtPayload, payload: IPost) => {
   const user = await User.findOne({ email: userData.email });
@@ -56,7 +56,15 @@ const create = async (userData: JwtPayload, payload: IPost) => {
     await session.commitTransaction();
     await session.endSession();
 
-    return (await newPost[0].populate("author")).populate("category");
+    return (
+      await newPost[0].populate({
+        path: "author",
+        select: "fullName email profilePicture",
+      })
+    ).populate({
+      path: "category",
+      select: "name description postCount",
+    });
   } catch (err) {
     // Abort transaction in case of an error
     await session.abortTransaction();
@@ -145,207 +153,98 @@ const getPostByProperty = async (key: string, value: string) => {
 };
 
 // get premium single post
-const getPremiumSinglePost = async (userData: JwtPayload, id: string) => {
-  const currentLoggedInUser = await User.findOne({ email: userData.email });
-  if (!currentLoggedInUser) {
-    throw new AppError(httpStatus.NOT_FOUND, "User not found");
-  }
+const getPremiumSinglePost = async (userData: JwtPayload, postId: string) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  // Fetch the post by its ID
-  const post = await Post.findById(id)
-    .populate({
-      path: "author",
-      select: "fullName email profilePicture",
-    })
-    .populate({
-      path: "category",
-      select: "name description postCount",
-    });
+  try {
+    // Get the current logged-in user
+    const currentLoggedInUser = await User.findOne({
+      email: userData.email,
+    }).session(session);
 
-  if (!post) {
-    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
-  }
+    if (!currentLoggedInUser) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
 
-  // If the logged-in user is the author of the post, allow access without checking premium status
-  if (post.author._id.equals(currentLoggedInUser._id)) {
+    // Fetch the post by its ID
+    const post = await Post.findById(postId)
+      .populate({
+        path: "author",
+        select: "fullName email profilePicture",
+      })
+      .populate({
+        path: "category",
+        select: "name description postCount",
+      })
+      .session(session);
+
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Allow access if the current user is the post author
+    if (post.author._id.equals(currentLoggedInUser._id)) {
+      await session.commitTransaction();
+      session.endSession();
+      return post; // No need to record views for the author
+    }
+
+    // Check if the user is a premium user
+    const isPremiumUser = currentLoggedInUser.isPremiumUser;
+    if (!isPremiumUser) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "Premium content access is for premium members only",
+      );
+    }
+
+    // Verify if the user's subscription is active
+    const subscriptionActive = await isPremiumSubscriptionActive(
+      currentLoggedInUser._id,
+    );
+
+    if (!subscriptionActive) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "Your subscription is inactive or expired. Please renew to access premium content.",
+      );
+    }
+
+    // Ensure the user has not already viewed the post
+    const existingView = await View.findOne({
+      post: post._id,
+      user: currentLoggedInUser._id,
+    }).session(session);
+
+    if (!existingView) {
+      // Record the view if it's a new view by the user (excluding the author)
+      await View.create([{ post: post._id, user: currentLoggedInUser._id }], {
+        session,
+      });
+
+      // Increment the view count in the post
+      post.totalViews += 1;
+      await post.save({ session });
+    }
+
+    // Commit transaction and return the post
+    await session.commitTransaction();
+    session.endSession();
+
     return post;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
-
-  // If the logged-in user is not the author, check if they are a premium member
-  if (!currentLoggedInUser.isPremiumUser) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "Premium content access is only for premium members",
-    );
-  }
-
-  // Fetch the user's current subscription
-  const currentSubscription = await Subscription.findOne({
-    user: currentLoggedInUser._id,
-  });
-
-  // Check if the subscription exists
-  if (!currentSubscription) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "You do not have an active subscription. Please subscribe to access premium content.",
-    );
-  }
-
-  // Check if the subscription is active and not expired
-  const currentDate = new Date();
-  if (
-    currentSubscription.status !== "Active" ||
-    currentDate < new Date(currentSubscription.startDate) ||
-    currentDate > new Date(currentSubscription.endDate)
-  ) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "Your premium subscription has expired or is not active. Please renew your subscription.",
-    );
-  }
-
-  // Increment the view count only if the user has not viewed this post before
-  const hasViewed = post.viewedBy.includes(currentLoggedInUser._id);
-  if (!hasViewed) {
-    await Post.findByIdAndUpdate(id, {
-      $inc: { views: 1 },
-      $push: { viewedBy: currentLoggedInUser._id },
-    });
-  }
-
-  return post;
 };
 
 // upvote a post
-const upvotePost = async (userData: JwtPayload, postId: string) => {
-  // Start a session for transaction handling
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const currentLoggedInUser = await User.findOne({ email: userData.email });
-    if (!currentLoggedInUser) {
-      throw new AppError(httpStatus.NOT_FOUND, "User not found");
-    }
-
-    // Fetch the post by its ID
-    const post = await Post.findById(postId).session(session);
-    if (!post) {
-      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
-    }
-
-    // Check if the user has already upvoted the post
-    const hasAlreadyUpvoted = post.upvotedBy.includes(currentLoggedInUser._id);
-    const hasAlreadyDownvoted = post.downvotedBy.includes(
-      currentLoggedInUser._id,
-    );
-
-    if (hasAlreadyUpvoted) {
-      // Remove upvote if the user has already upvoted (toggle behavior)
-      post.upVotes -= 1;
-      post.upvotedBy = post.upvotedBy.filter(
-        (userId) => !userId.equals(currentLoggedInUser._id),
-      );
-    } else {
-      // Add upvote
-      post.upVotes += 1;
-      post.upvotedBy.push(currentLoggedInUser._id);
-
-      // If the user had downvoted the post previously, remove the downvote
-      if (hasAlreadyDownvoted) {
-        post.downVotes -= 1;
-        post.downvotedBy = post.downvotedBy.filter(
-          (userId) => !userId.equals(currentLoggedInUser._id),
-        );
-      }
-    }
-
-    // Save the changes
-    await post.save({ session });
-
-    // Commit the transaction and end the session
-    await session.commitTransaction();
-    session.endSession();
-
-    return {
-      message: hasAlreadyUpvoted
-        ? "Upvote removed"
-        : "Post upvoted successfully",
-      post,
-    };
-  } catch (error) {
-    // Abort the transaction in case of error
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
-};
+const upvotePost = async (userData: JwtPayload, postId: string) => {};
 
 // downvote a post
-const downvotePost = async (userData: JwtPayload, postId: string) => {
-  // Start a session for transaction handling
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const currentLoggedInUser = await User.findOne({ email: userData.email });
-    if (!currentLoggedInUser) {
-      throw new AppError(httpStatus.NOT_FOUND, "User not found");
-    }
-
-    // Fetch the post by its ID
-    const post = await Post.findById(postId).session(session);
-    if (!post) {
-      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
-    }
-
-    // Check if the user has already downvoted the post
-    const hasAlreadyDownvoted = post.downvotedBy.includes(
-      currentLoggedInUser._id,
-    );
-    const hasAlreadyUpvoted = post.upvotedBy.includes(currentLoggedInUser._id);
-
-    if (hasAlreadyDownvoted) {
-      // Remove downvote if the user has already downvoted (toggle behavior)
-      post.downVotes -= 1;
-      post.downvotedBy = post.downvotedBy.filter(
-        (userId) => !userId.equals(currentLoggedInUser._id),
-      );
-    } else {
-      // Add downvote
-      post.downVotes += 1;
-      post.downvotedBy.push(currentLoggedInUser._id);
-
-      // If the user had upvoted the post previously, remove the upvote
-      if (hasAlreadyUpvoted) {
-        post.upVotes -= 1;
-        post.upvotedBy = post.upvotedBy.filter(
-          (userId) => !userId.equals(currentLoggedInUser._id),
-        );
-      }
-    }
-
-    // Save the changes
-    await post.save({ session });
-
-    // Commit the transaction and end the session
-    await session.commitTransaction();
-    session.endSession();
-
-    return {
-      message: hasAlreadyDownvoted
-        ? "Downvote removed"
-        : "Post downvoted successfully",
-      post,
-    };
-  } catch (error) {
-    // Abort the transaction in case of error
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
-};
+const downvotePost = async (userData: JwtPayload, postId: string) => {};
 
 // comment on post with transaction
 const commentOnPost = async (

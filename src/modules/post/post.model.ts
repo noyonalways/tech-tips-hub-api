@@ -62,28 +62,13 @@ const postSchema = new Schema<IPost>({
     type: Number,
     default: 0,
   },
-  upvotedBy: {
-    type: [Schema.Types.ObjectId],
-    ref: "User",
-    default: [],
-  },
-  downvotedBy: {
-    type: [Schema.Types.ObjectId],
-    ref: "User",
-    default: [],
-  },
   totalComments: {
     type: Number,
     default: 0,
   },
-  views: {
+  totalViews: {
     type: Number,
     default: 0,
-  },
-  viewedBy: {
-    type: [Schema.Types.ObjectId],
-    ref: "User",
-    default: [],
   },
   isDeleted: {
     type: Boolean,
