@@ -1,6 +1,7 @@
 import httpStatus from "http-status";
 import { JwtPayload } from "jsonwebtoken";
 import mongoose from "mongoose";
+import { QueryBuilder } from "../../builder";
 import { USER_STATUS } from "../../constant";
 import { AppError } from "../../errors";
 import Follower from "../follower/follower.model";
@@ -218,6 +219,140 @@ const unfollowUser = async (userData: JwtPayload, userIdToUnfollow: string) => {
   }
 };
 
+// get current logged in user followers
+const getLoggedInUserFollowers = async (
+  userData: JwtPayload,
+  query: Record<string, unknown>,
+) => {
+  const currentLoggedInUser = await User.findOne({
+    email: userData.email,
+  });
+
+  if (!currentLoggedInUser) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const followersQuery = new QueryBuilder(
+    Follower.find({ following: currentLoggedInUser._id })
+      .populate(
+        "follower",
+        "fullName username email profilePicture totalFollowers totalFollowing",
+      )
+      .select("follower"),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await followersQuery.modelQuery;
+  const meta = await followersQuery.countTotal();
+
+  return { result, meta };
+};
+
+// get current logged in user following
+const getLoggedInUserFollowing = async (
+  userData: JwtPayload,
+  query: Record<string, unknown>,
+) => {
+  // Find the current logged-in user
+  const currentLoggedInUser = await User.findOne({
+    email: userData.email,
+  });
+
+  if (!currentLoggedInUser) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // Build a query to get all users that the current user is following
+  const followingQuery = new QueryBuilder(
+    Follower.find({ follower: currentLoggedInUser._id })
+      .populate(
+        "following",
+        "fullName username email profilePicture totalFollowers totalFollowing",
+      )
+      .select("following"),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await followingQuery.modelQuery;
+  const meta = await followingQuery.countTotal();
+
+  return { result, meta };
+};
+
+// get all followers by user id
+const getFollowersByUserId = async (
+  userId: string,
+  query: Record<string, unknown>,
+) => {
+  // Find the user by ID
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // Build a query to get all followers of the specified user
+  const followersQuery = new QueryBuilder(
+    Follower.find({ following: user._id })
+      .populate(
+        "follower",
+        "fullName username email profilePicture totalFollowers totalFollowing",
+      )
+      .select("follower"),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await followersQuery.modelQuery;
+  const meta = await followersQuery.countTotal();
+
+  return { result, meta };
+};
+
+// get all following by user id
+const getFollowingByUserId = async (
+  userId: string,
+  query: Record<string, unknown>,
+) => {
+  // Find the user by ID
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // Build a query to get all users followed by the specified user
+  const followingQuery = new QueryBuilder(
+    Follower.find({ follower: user._id })
+      .populate(
+        "following",
+        "fullName username email profilePicture totalFollowers totalFollowing",
+      )
+      .select("following"),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await followingQuery.modelQuery;
+  const meta = await followingQuery.countTotal();
+
+  return { result, meta };
+};
+
 export const userService = {
   updateProfile,
   updateSocialLinks,
@@ -225,4 +360,8 @@ export const userService = {
   unBlockUser,
   followUser,
   unfollowUser,
+  getLoggedInUserFollowers,
+  getLoggedInUserFollowing,
+  getFollowersByUserId,
+  getFollowingByUserId,
 };

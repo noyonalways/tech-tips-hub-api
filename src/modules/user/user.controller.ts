@@ -78,6 +78,73 @@ const unfollowUser = catchAsync(async (req, res) => {
   });
 });
 
+// get current logged in user followers
+const getLoggedInUserFollowers = catchAsync(async (req, res) => {
+  const { result, meta } = await userService.getLoggedInUserFollowers(
+    req.user,
+    req.query,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Followers retrieved successfully",
+    meta,
+    data: result,
+  });
+});
+
+// get current logged in user following
+const getLoggedInUserFollowing = catchAsync(async (req, res) => {
+  const { result, meta } = await userService.getLoggedInUserFollowing(
+    req.user,
+    req.query,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Following retrieved successfully",
+    meta,
+    data: result,
+  });
+});
+
+// get followers by user id
+const getFollowersByUserId = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { result, meta } = await userService.getFollowersByUserId(
+    id,
+    req.query,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Followers retrieved successfully",
+    meta,
+    data: result,
+  });
+});
+
+// get following by user id
+
+const getFollowingByUserId = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { result, meta } = await userService.getFollowingByUserId(
+    id,
+    req.query,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Following retrieved successfully",
+    meta,
+    data: result,
+  });
+});
+
 export const userController = {
   updateProfile,
   updateSocialLinks,
@@ -85,4 +152,8 @@ export const userController = {
   unBlockUser,
   followUser,
   unfollowUser,
+  getLoggedInUserFollowers,
+  getLoggedInUserFollowing,
+  getFollowersByUserId,
+  getFollowingByUserId,
 };

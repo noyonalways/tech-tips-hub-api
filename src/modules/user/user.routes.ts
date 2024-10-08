@@ -45,12 +45,34 @@ userRouter.patch(
   userController.unBlockUser,
 );
 
-// follow a user
+// follow a user (id: indicates that the user wanted to follow)
 userRouter.put("/:id/follow", auth(USER_ROLE.USER), userController.followUser);
+
+// unfollow a user (id: indicates that the user wanted to unfollow)
 userRouter.delete(
   "/:id/unfollow",
   auth(USER_ROLE.USER),
   userController.unfollowUser,
 );
+
+// get current logged is user followers
+userRouter.get(
+  "/my-followers",
+  auth(USER_ROLE.USER),
+  userController.getLoggedInUserFollowers,
+);
+
+// get current logged is user following
+userRouter.get(
+  "/my-following",
+  auth(USER_ROLE.USER),
+  userController.getLoggedInUserFollowing,
+);
+
+// get all followers by user id
+userRouter.get("/:id/followers", userController.getFollowersByUserId);
+
+// get all following by user id
+userRouter.get("/:id/following", userController.getFollowingByUserId);
 
 export default userRouter;
