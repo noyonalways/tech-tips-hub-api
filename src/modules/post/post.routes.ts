@@ -72,12 +72,16 @@ postRouter.post(
       ).map((file) => file.path);
 
       req.body.data = JSON.stringify({
-        ...JSON.parse(req.body.data),
+        ...JSON.parse(req.body.data || "{}"),
         images: imagePaths,
       });
     }
 
-    req.body = { ...JSON.parse(req.body.data) };
+    if (typeof req.body.data === "string" && req.body.data.trim()) {
+      req.body = { ...JSON.parse(req.body.data) };
+    } else {
+      req.body = {};
+    }
 
     next();
   }),
