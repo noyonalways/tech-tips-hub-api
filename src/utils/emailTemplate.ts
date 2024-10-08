@@ -1,3 +1,6 @@
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
+
 // payment success
 export const generatePaymentSuccessEmail = ({
   fullName,
@@ -75,7 +78,7 @@ export const generatePaymentSuccessEmail = ({
           <tr>
             <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
               <strong>
-                <img src="https://cdn-icons-png.flaticon.com/128/1484/1484799.png" alt="Fingerprint"
+                <img src="https://cdn-icons-png.flaticon.com/128/9368/9368835.png" alt="Fingerprint"
                   style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
                 Transaction Id:
               </strong>
@@ -116,7 +119,7 @@ export const generatePaymentSuccessEmail = ({
           <tr>
             <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
               <strong>
-                <img src="https://cdn-icons-png.flaticon.com/128/2693/2693520.png" alt="Calendar Minus"
+                <img src="https://cdn-icons-png.flaticon.com/128/2693/2693507.png" alt="Calendar Minus"
                   style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
                 Subscription End:
               </strong>
@@ -251,7 +254,7 @@ export const generatePaymentFailedEmail = ({
           <tr>
             <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
               <strong>
-                <img src="https://cdn-icons-png.flaticon.com/128/1484/1484799.png" alt="Fingerprint"
+                <img src="https://cdn-icons-png.flaticon.com/128/9368/9368835.png" alt="Fingerprint"
                   style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
                 Transaction Id:
               </strong>
@@ -286,7 +289,7 @@ export const generatePaymentFailedEmail = ({
                 Attempt At:
               </strong>
             </td>
-            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">${new Date().toLocaleString()}</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">${format(toZonedTime(new Date(), "Asia/Dhaka"), "M/d/yyyy, h:mm:ss a")}</td>
           </tr>
         </table>
         <p style="margin: 0 0 20px;">Please take a moment to review your payment information and try again. Common
@@ -413,7 +416,7 @@ export const generatePaymentCanceledEmail = ({
           <tr>
             <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
               <strong>
-                <img src="https://cdn-icons-png.flaticon.com/128/1484/1484799.png" alt="Fingerprint"
+                <img src="https://cdn-icons-png.flaticon.com/128/9368/9368835.png" alt="Fingerprint"
                   style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
                 Transaction Id:
               </strong>
@@ -448,7 +451,7 @@ export const generatePaymentCanceledEmail = ({
                 Cancellation At:
               </strong>
             </td>
-            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">${new Date().toLocaleString()}</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">${format(toZonedTime(new Date(), "Asia/Dhaka"), "M/d/yyyy, h:mm:ss a")}</td>
           </tr>
         </table>
         <p style="margin: 0 0 20px;">If you did not initiate this cancellation or if you have any questions about this

@@ -153,7 +153,10 @@ const forgetPassword = async (email: string) => {
 
   // send reset link to user email
   await sendEmail({
-    to: user.email,
+    to: {
+      name: user.fullName,
+      address: user.email,
+    },
     subject: "Reset Your Password within 30 minutes",
     text: "Reset Your Password within 30 minutes",
     html: generateResetPasswordEmail({

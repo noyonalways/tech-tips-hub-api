@@ -1,3 +1,5 @@
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import httpStatus from "http-status";
 import { AppError } from "../../errors";
 import {
@@ -90,7 +92,10 @@ const paymentConfirmation = async (transactionId: string) => {
 
       // send a email to the  user
       await sendEmail({
-        to: updatedUser.email,
+        to: {
+          name: updatedUser.fullName,
+          address: updatedUser.email,
+        },
         subject: "Payment Successful",
         text: "Payment Successful",
         html: generatePaymentSuccessEmail({
@@ -103,7 +108,10 @@ const paymentConfirmation = async (transactionId: string) => {
           subscriptionType: updatedSubscription.type,
           startDate: updatedSubscription.startDate.toLocaleDateString(),
           endDate: updatedSubscription.endDate.toLocaleDateString(),
-          paidAt: updatedPayment.paidAt.toLocaleString(),
+          paidAt: format(
+            toZonedTime(new Date(updatedPayment?.paidAt), "Asia/Dhaka"),
+            "M/d/yyyy, h:mm:ss a",
+          ),
           transactionId: updatedPayment.transactionId,
         }),
       });
@@ -187,7 +195,10 @@ const paymentFailed = async (transactionId: string) => {
     session.endSession();
 
     await sendEmail({
-      to: updatedUser.email,
+      to: {
+        name: updatedUser.fullName,
+        address: updatedUser.email,
+      },
       subject: "Payment Failed",
       text: "Payment Failed",
       html: generatePaymentFailedEmail({
@@ -276,7 +287,10 @@ const paymentCancelled = async (transactionId: string) => {
     session.endSession();
 
     await sendEmail({
-      to: updatedUser.email,
+      to: {
+        name: updatedUser.fullName,
+        address: updatedUser.email,
+      },
       subject: "Payment Canceled",
       text: "Payment Canceled",
       html: generatePaymentCanceledEmail({
