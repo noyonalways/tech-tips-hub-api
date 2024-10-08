@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import { multerUpload } from "../../config/multer.config";
 import { USER_ROLE } from "../../constant";
 import { auth, validateRequest } from "../../middlewares";
+import { catchAsync } from "../../utils";
 import { commentValidationSchema } from "../comment/comment.validation";
 import { postController } from "./post.controller";
 import { postValidationSchema } from "./post.validation";
@@ -63,6 +64,23 @@ postRouter.put("/:id/vote", auth(USER_ROLE.USER), postController.voteOnPost);
 postRouter.post(
   "/:id/comments",
   auth(USER_ROLE.USER),
+  multerUpload.array("images"),
+  catchAsync((req: Request, _res: Response, next: NextFunction) => {
+    if (req.files && req.files.length) {
+      const imagePaths = (
+        req.files as { fieldname: string; path: string }[]
+      ).map((file) => file.path);
+
+      req.body.data = JSON.stringify({
+        ...JSON.parse(req.body.data),
+        images: imagePaths,
+      });
+    }
+
+    req.body = { ...JSON.parse(req.body.data) };
+
+    next();
+  }),
   validateRequest(commentValidationSchema.commentOnPost),
   postController.commentOnPost,
 );

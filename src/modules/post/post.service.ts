@@ -430,11 +430,11 @@ const getAllCommentsByPostId = async (
     Comment.find({ post: post._id })
       .populate({
         path: "user",
-        select: "fullName email profilePicture", // Select only specific user fields
+        select: "fullName email username profilePicture", // Select only specific user fields
       })
       .populate({
         path: "post",
-        select: "title category slug", // Select specific post fields
+        select: "title slug", // Select specific post fields
       }),
     query,
   )
