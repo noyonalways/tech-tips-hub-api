@@ -8,6 +8,22 @@ import Follower from "../follower/follower.model";
 import { IUser, TSocialLink } from "./user.interface";
 import User from "./user.model";
 
+// get all users
+
+const getAllUsers = async (query: Record<string, unknown>) => {
+  const userQuery = new QueryBuilder(User.find({}), query)
+    .search(["fullName", "email", "username"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await userQuery.modelQuery;
+  const meta = await userQuery.countTotal();
+
+  return { result, meta };
+};
+
 const updateProfile = async (userData: JwtPayload, payload: IUser) => {
   const updatedUser = await User.findOneAndUpdate(
     { email: userData.email },
@@ -354,6 +370,7 @@ const getFollowingByUserId = async (
 };
 
 export const userService = {
+  getAllUsers,
   updateProfile,
   updateSocialLinks,
   blockUser,

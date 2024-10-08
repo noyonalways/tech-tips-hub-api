@@ -20,6 +20,13 @@ const create = async (userData: JwtPayload, payload: IPost) => {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
+  if (!user.isPremiumUser) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only premium membership user can post premium posts, please subscribe premium subscription first",
+    );
+  }
+
   const category = await Category.findById(payload.category);
   if (!category) {
     throw new AppError(httpStatus.NOT_FOUND, "Category not found");
@@ -60,7 +67,7 @@ const create = async (userData: JwtPayload, payload: IPost) => {
     return (
       await newPost[0].populate({
         path: "author",
-        select: "fullName email profilePicture",
+        select: "fullName email username profilePicture",
       })
     ).populate({
       path: "category",

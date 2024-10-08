@@ -8,6 +8,9 @@ import { userValidationSchema } from "./user.validation";
 
 const userRouter: Router = Router();
 
+// get all users (admin only)
+userRouter.get("/", auth(USER_ROLE.ADMIN), userController.getAllUsers);
+
 // update logged in user profile endpoints
 userRouter.patch(
   "/update-profile",

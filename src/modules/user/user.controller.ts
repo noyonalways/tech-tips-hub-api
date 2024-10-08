@@ -2,6 +2,19 @@ import httpStatus from "http-status";
 import { catchAsync, sendResponse } from "../../utils";
 import { userService } from "./user.service";
 
+// get all users (admin only)
+
+const getAllUsers = catchAsync(async (req, res) => {
+  const result = await userService.getAllUsers(req.query);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "All users retrieved successfully",
+    data: result,
+  });
+});
+
 const updateProfile = catchAsync(async (req, res) => {
   const result = await userService.updateProfile(req.user, req.body);
 
@@ -128,7 +141,6 @@ const getFollowersByUserId = catchAsync(async (req, res) => {
 });
 
 // get following by user id
-
 const getFollowingByUserId = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { result, meta } = await userService.getFollowingByUserId(
@@ -146,6 +158,7 @@ const getFollowingByUserId = catchAsync(async (req, res) => {
 });
 
 export const userController = {
+  getAllUsers,
   updateProfile,
   updateSocialLinks,
   blockUser,
