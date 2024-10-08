@@ -2,7 +2,7 @@ import httpStatus from "http-status";
 import { JwtPayload } from "jsonwebtoken";
 import config from "../../config";
 import { AppError } from "../../errors";
-import { sendEmail } from "../../utils";
+import { generateResetPasswordEmail, sendEmail } from "../../utils";
 import { IUser } from "../user/user.interface";
 import User from "../user/user.model";
 
@@ -155,9 +155,15 @@ const forgetPassword = async (email: string) => {
   await sendEmail({
     to: user.email,
     subject: "Reset Your Password within 30 minutes",
-    text: "Reset Your Password within 10 minutes",
-    html: resetUILink,
+    text: "Reset Your Password within 30 minutes",
+    html: generateResetPasswordEmail({
+      resetPasswordLink: resetUILink,
+      fullName: user.fullName,
+    }),
   });
+
+  // eslint-disable-next-line no-console
+  console.log(`Password reset link sent to ${user.email}`);
 };
 
 // reset password
