@@ -23,7 +23,7 @@ const viewSchema = new Schema<IView>(
   },
 );
 
-// viewSchema.index({ post: 1, user: 1 }, { unique: true });
+viewSchema.index({ post: 1, user: 1 }, { unique: true });
 
 const View = model<IView>("View", viewSchema);
 

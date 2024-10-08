@@ -52,9 +52,37 @@ const unBlockUser = catchAsync(async (req, res) => {
   });
 });
 
+// follow user
+const followUser = catchAsync(async (req, res) => {
+  const { id } = req.params; // user id want's to follow
+  const result = await userService.followUser(req.user, id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully followed the user",
+    data: result,
+  });
+});
+
+// unfollow user
+const unfollowUser = catchAsync(async (req, res) => {
+  const { id } = req.params; // user id want's to follow
+  const result = await userService.unfollowUser(req.user, id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Successfully unfollowed the user",
+    data: result,
+  });
+});
+
 export const userController = {
   updateProfile,
   updateSocialLinks,
   blockUser,
   unBlockUser,
+  followUser,
+  unfollowUser,
 };

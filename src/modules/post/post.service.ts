@@ -128,7 +128,8 @@ const getPostByProperty = async (key: string, value: string) => {
     post = await Post.findById(value)
       .populate({
         path: "author",
-        select: "fullName email profilePicture",
+        select:
+          "fullName email profilePicture totalFollowers totalFollowing username",
       })
       .populate({
         path: "category",
@@ -172,7 +173,8 @@ const getPremiumSinglePost = async (userData: JwtPayload, postId: string) => {
     const post = await Post.findById(postId)
       .populate({
         path: "author",
-        select: "fullName email profilePicture",
+        select:
+          "fullName email profilePicture totalFollowers totalFollowing username",
       })
       .populate({
         path: "category",

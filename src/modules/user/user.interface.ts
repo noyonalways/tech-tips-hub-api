@@ -1,5 +1,5 @@
 import { JwtPayload } from "jsonwebtoken";
-import { Document, Model, Types } from "mongoose";
+import { Document, Model } from "mongoose";
 
 export type TUserRole = "User" | "Admin";
 export type TUserStatus = "Active" | "Blocked";
@@ -30,8 +30,8 @@ export interface IUser extends Document {
   profilePicture: string;
   role: TUserRole;
   status: TUserStatus;
-  followers: Types.ObjectId[];
-  following: Types.ObjectId[];
+  totalFollowers: number;
+  totalFollowing: number;
   socialLinks: TSocialLink[];
   location: string;
   dateOfBirth: Date;

@@ -45,4 +45,12 @@ userRouter.patch(
   userController.unBlockUser,
 );
 
+// follow a user
+userRouter.put("/:id/follow", auth(USER_ROLE.USER), userController.followUser);
+userRouter.delete(
+  "/:id/unfollow",
+  auth(USER_ROLE.USER),
+  userController.unfollowUser,
+);
+
 export default userRouter;
