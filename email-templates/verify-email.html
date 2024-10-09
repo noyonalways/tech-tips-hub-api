@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Verify Your Email Address</title>
+</head>
+
+<body bgcolor="#f0f0f0" style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#f0f0f0">
+    <tr>
+      <td align="center" valign="top">
+        <table width="600" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td align="center" valign="top" bgcolor="#44d3d1" style="padding: 40px 0 30px 0;">
+              <h2 style="color: #fff;">
+                <img src="https://cdn-icons-png.flaticon.com/128/2530/2530973.png" alt="Check"
+                  style="vertical-align: middle; margin-right: 10px; width: 40px; height: 40px;">
+                Verify Email
+              </h2>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#ffffff" style="padding: 40px 10px;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="color: #153643; font-family: Arial, sans-serif; font-size: 24px;">
+                    <b>Verify Your Email Address</b>
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style="padding: 20px 0 30px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+                    Dear {{ .Data.user_name }},<br><br>
+                    Thank you for creating an account with Tech Tips Hub. To ensure the security of your
+                    account and activate all features, please verify your email address by clicking the button below:
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="center">
+                          <a href="{{ .ConfirmationURL }}" target="_blank"
+                            style="font-size: 16px; font-family: Arial, sans-serif; color: #ffffff; text-decoration: none; padding: 12px 30px; border: 1px solid #44d3d1; display: inline-block; background-color: #44d3d1; border-radius: 3px;">Verify
+                            Email Address</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style="padding: 30px 0 0 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+                    If the button above doesn't work, please copy and paste the following link into your web browser:
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0 0 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+                    <span style="color: #44d3d1; text-decoration: underline;">{{
+                      .ConfirmationURL }}</>
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style="padding: 30px 0 0 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
+                    This link will expire in 24 hours for security reasons. If you did not create an account with us,
+                    please disregard this email.<br><br>
+                    If you have any questions or need assistance, please don't hesitate to contact our support team at
+                    support@tech-tips-hub.com.<br><br>
+                    Best regards,<br>
+                    The Tech Tips Hub Team
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#44d3d1" style="padding: 30px 30px 30px 30px;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="color: #ffffff; font-family: Arial, sans-serif; font-size: 14px;" width="75%">
+                    &copy; Tech Tips Hub 2023<br />
+
+                  </td>
+                  <td align="right" width="25%">
+                    <table border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold;">
+                          <a href="http://www.twitter.com/" style="color: #ffffff;">
+                            <img src="https://cdn-icons-png.flaticon.com/128/733/733579.png" alt="Twitter" width="24"
+                              height="24" style="display: block;" border="0" />
+                          </a>
+                        </td>
+                        <td style="font-size: 0; line-height: 0;" width="20">&nbsp;</td>
+                        <td style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold;">
+                          <a href="http://www.facebook.com/" style="color: #ffffff;">
+                            <img src="https://cdn-icons-png.flaticon.com/128/5968/5968764.png" alt="Facebook" width="24"
+                              height="24" style="display: block;" border="0" />
+                          </a>
+                        </td>
+                        <td style="font-size: 0; line-height: 0;" width="20">&nbsp;</td>
+                        <td style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold;">
+                          <a href="http://www.facebook.com/" style="color: #ffffff;">
+                            <img src="https://cdn-icons-png.flaticon.com/128/2111/2111463.png" alt="Facebook" width="24"
+                              height="24" style="display: block;" border="0" />
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>

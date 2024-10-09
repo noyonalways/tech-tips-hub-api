@@ -2,10 +2,15 @@ import httpStatus from "http-status";
 import { JwtPayload } from "jsonwebtoken";
 import config from "../../config";
 import { AppError } from "../../errors";
-import { generateResetPasswordEmail, sendEmail } from "../../utils";
+import {
+  generateResetPasswordEmail,
+  generateVerifyEmail,
+  sendEmail,
+} from "../../utils";
 import { IUser } from "../user/user.interface";
 import User from "../user/user.model";
 
+// register new user
 const register = async (payload: IUser) => {
   const existedEmail = await User.findOne({ email: payload.email });
   if (existedEmail) {
@@ -17,9 +22,43 @@ const register = async (payload: IUser) => {
     throw new AppError(409, "Username already exists");
   }
 
-  return User.create(payload);
+  const newUser = await User.create(payload);
+
+  // generate jwt verify token
+  const jwtPayload = {
+    email: newUser.email,
+    role: newUser.role,
+  };
+
+  const verifyToken = User.createToken(
+    jwtPayload,
+    config.jwt_reset_password_secret as string,
+    config.jwt_reset_password_expires_in as string,
+  );
+
+  const verifyEmailLink = `${config.api_base_url}/auth/verify-email?email=${newUser?.email}&token=${verifyToken}`;
+
+  // send verify email link
+  await sendEmail({
+    to: {
+      name: newUser.fullName,
+      address: newUser.email,
+    },
+    subject: "Verify your email address with 24 hours",
+    text: "Please verify your email address with 24 hours",
+    html: generateVerifyEmail({
+      verifyEmailLink: verifyEmailLink,
+      fullName: newUser.fullName,
+    }),
+  });
+
+  // eslint-disable-next-line no-console
+  console.log(`Verify email link sent to ${newUser.email}`);
+
+  return newUser;
 };
 
+// login user
 const login = async (payload: IUser) => {
   const user = await User.findOne({ email: payload.email }).select("+password");
 
