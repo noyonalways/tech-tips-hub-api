@@ -24,6 +24,15 @@ const getAllUsers = async (query: Record<string, unknown>) => {
   return { result, meta };
 };
 
+const getSingleUserByUsername = async (username: string) => {
+  const user = await User.findOne({ username });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  return user;
+};
+
 const updateProfile = async (userData: JwtPayload, payload: IUser) => {
   const updatedUser = await User.findOneAndUpdate(
     { email: userData.email },
@@ -381,4 +390,5 @@ export const userService = {
   getLoggedInUserFollowing,
   getFollowersByUserId,
   getFollowingByUserId,
+  getSingleUserByUsername,
 };

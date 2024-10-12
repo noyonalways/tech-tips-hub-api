@@ -3,7 +3,6 @@ import { catchAsync, sendResponse } from "../../utils";
 import { userService } from "./user.service";
 
 // get all users (admin only)
-
 const getAllUsers = catchAsync(async (req, res) => {
   const result = await userService.getAllUsers(req.query);
 
@@ -11,6 +10,18 @@ const getAllUsers = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: "All users retrieved successfully",
+    data: result,
+  });
+});
+
+const getSingleUserByUsername = catchAsync(async (req, res) => {
+  const { username } = req.params;
+  const result = await userService.getSingleUserByUsername(username);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User retrieved successfully",
     data: result,
   });
 });
@@ -169,4 +180,5 @@ export const userController = {
   getLoggedInUserFollowing,
   getFollowersByUserId,
   getFollowingByUserId,
+  getSingleUserByUsername,
 };

@@ -32,6 +32,7 @@ export interface IUser extends Document {
   status: TUserStatus;
   totalFollowers: number;
   totalFollowing: number;
+  totalPosts: number;
   socialLinks: TSocialLink[];
   location: string;
   dateOfBirth: Date;

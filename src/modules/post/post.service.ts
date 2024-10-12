@@ -60,6 +60,17 @@ const create = async (userData: JwtPayload, payload: IPost) => {
       throw new AppError(httpStatus.BAD_REQUEST, "Failed to update category");
     }
 
+    // Increment total post count 1
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $inc: { totalPosts: 1 } }, // Increment the postCount field by 1
+      { session, new: true }, // Pass session and return the updated category
+    );
+
+    if (!updatedUser) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Failed to update User");
+    }
+
     // Commit the transaction and end the session
     await session.commitTransaction();
     await session.endSession();

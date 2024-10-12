@@ -10,6 +10,7 @@ const userRouter: Router = Router();
 
 // get all users (admin only)
 userRouter.get("/", auth(USER_ROLE.ADMIN), userController.getAllUsers);
+userRouter.get("/:username", userController.getSingleUserByUsername);
 
 // update logged in user profile endpoints
 userRouter.patch(

@@ -79,6 +79,10 @@ const login = async (payload: IUser) => {
   }
 
   const jwtPayload = {
+    _id: user._id,
+    profilePicture: user.profilePicture,
+    username: user.username,
+    name: user.fullName,
     email: user.email,
     role: user.role,
   };
@@ -293,6 +297,10 @@ const generateNewAccessToken = async (refreshToken: string) => {
   }
 
   const jwtPayload = {
+    _id: user._id,
+    profilePicture: user.profilePicture,
+    username: user.username,
+    name: user.fullName,
     email: user.email,
     role: user.role,
   };

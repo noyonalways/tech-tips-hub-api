@@ -109,6 +109,10 @@ const userSchema = new Schema<IUser, IUserModel>(
       type: Number,
       default: 0,
     },
+    totalPosts: {
+      type: Number,
+      default: 0,
+    },
     dateOfBirth: {
       type: Date,
       required: [true, "Date of Birth is required"],
