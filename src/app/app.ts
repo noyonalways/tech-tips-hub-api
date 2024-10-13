@@ -13,7 +13,20 @@ const app = express();
 // middlewares
 app.use(morgan("dev"));
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://192.168.0.116:3000",
+      "https://techtipshub.vercel.app",
+      "https://techtipshub.noyonrahman.xyz",
+      "https://techtipshub-password-reset.vercel.app",
+      "https://techtipshub-password-reset.noyonrahman.xyz",
+    ],
+    credentials: true,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 

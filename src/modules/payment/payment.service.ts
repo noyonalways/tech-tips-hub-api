@@ -1,5 +1,13 @@
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import httpStatus from "http-status";
 import { AppError } from "../../errors";
+import {
+  generatePaymentCanceledEmail,
+  generatePaymentFailedEmail,
+  generatePaymentSuccessEmail,
+  sendEmail,
+} from "../../utils";
 import { SUBSCRIPTION_STATUS } from "../subscription/subscription.constant";
 import Subscription from "../subscription/subscription.model";
 import User from "../user/user.model";
@@ -33,6 +41,7 @@ const paymentConfirmation = async (transactionId: string) => {
         { status: PAYMENT_STATUS.PAID, paidAt: new Date() },
         {
           session,
+          new: true,
           runValidators: true,
         },
       );
@@ -51,6 +60,7 @@ const paymentConfirmation = async (transactionId: string) => {
         },
         {
           session,
+          new: true,
           runValidators: true,
         },
       );
@@ -80,6 +90,35 @@ const paymentConfirmation = async (transactionId: string) => {
       await session.commitTransaction();
       session.endSession();
 
+      // send a email to the  user
+      await sendEmail({
+        to: {
+          name: updatedUser.fullName,
+          address: updatedUser.email,
+        },
+        subject: "Payment Successful",
+        text: "Payment Successful",
+        html: generatePaymentSuccessEmail({
+          username: updatedUser.username,
+          fullName: updatedUser.fullName,
+          amount: updatedPayment.amount,
+          currency: updatedPayment.currency,
+          status: updatedPayment.status,
+          paymentMethod: updatedPayment.paymentMethod,
+          subscriptionType: updatedSubscription.type,
+          startDate: updatedSubscription.startDate.toLocaleDateString(),
+          endDate: updatedSubscription.endDate.toLocaleDateString(),
+          paidAt: format(
+            toZonedTime(new Date(updatedPayment?.paidAt), "Asia/Dhaka"),
+            "M/d/yyyy, h:mm:ss a",
+          ),
+          transactionId: updatedPayment.transactionId,
+        }),
+      });
+
+      // eslint-disable-next-line no-console
+      console.log(`Email sent to ${updatedUser.email}`);
+
       return true;
     } catch (err) {
       await session.abortTransaction();
@@ -108,6 +147,7 @@ const paymentFailed = async (transactionId: string) => {
       { status: PAYMENT_STATUS.FAILED },
       {
         session,
+        new: true,
         runValidators: true,
       },
     );
@@ -117,26 +157,64 @@ const paymentFailed = async (transactionId: string) => {
     }
 
     // update the subscription model
-    const updatedBooking = await Subscription.findOneAndUpdate(
+    const updatedSubscription = await Subscription.findOneAndUpdate(
       { transactionId: transactionId },
       {
         status: SUBSCRIPTION_STATUS.PENDING,
       },
       {
         session,
+        new: true,
         runValidators: true,
       },
     );
 
-    if (!updatedBooking) {
+    if (!updatedSubscription) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
         "Filed to update subscription",
       );
     }
 
+    // update the user model isPremiumUser to true
+    const updatedUser = await User.findByIdAndUpdate(
+      updatedPayment.user,
+      { isPremiumUser: false },
+      {
+        session,
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    if (!updatedUser) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Failed to update user");
+    }
+
     await session.commitTransaction();
     session.endSession();
+
+    await sendEmail({
+      to: {
+        name: updatedUser.fullName,
+        address: updatedUser.email,
+      },
+      subject: "Payment Failed",
+      text: "Payment Failed",
+      html: generatePaymentFailedEmail({
+        username: updatedUser.username,
+        fullName: updatedUser.fullName,
+        amount: updatedPayment.amount,
+        currency: updatedPayment.currency,
+        status: updatedPayment.status,
+        paymentMethod: updatedPayment.paymentMethod,
+        transactionId: updatedPayment.transactionId,
+        subscriptionType: updatedSubscription.type,
+      }),
+    });
+
+    // eslint-disable-next-line no-console
+    console.log(`Email sent to ${updatedUser.email}`);
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
@@ -161,6 +239,7 @@ const paymentCancelled = async (transactionId: string) => {
       { status: PAYMENT_STATUS.CANCELED },
       {
         session,
+        new: true,
         runValidators: true,
       },
     );
@@ -170,26 +249,64 @@ const paymentCancelled = async (transactionId: string) => {
     }
 
     // update the subscription model
-    const updatedBooking = await Subscription.findOneAndUpdate(
+    const updatedSubscription = await Subscription.findOneAndUpdate(
       { transactionId: transactionId },
       {
         status: SUBSCRIPTION_STATUS.PENDING,
       },
       {
         session,
+        new: true,
         runValidators: true,
       },
     );
 
-    if (!updatedBooking) {
+    if (!updatedSubscription) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
         "Filed to update subscription",
       );
     }
 
+    // update the user model isPremiumUser to true
+    const updatedUser = await User.findByIdAndUpdate(
+      updatedPayment.user,
+      { isPremiumUser: false },
+      {
+        session,
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    if (!updatedUser) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Failed to update user");
+    }
+
     await session.commitTransaction();
     session.endSession();
+
+    await sendEmail({
+      to: {
+        name: updatedUser.fullName,
+        address: updatedUser.email,
+      },
+      subject: "Payment Canceled",
+      text: "Payment Canceled",
+      html: generatePaymentCanceledEmail({
+        username: updatedUser.username,
+        fullName: updatedUser.fullName,
+        amount: updatedPayment.amount,
+        currency: updatedPayment.currency,
+        status: updatedPayment.status,
+        paymentMethod: updatedPayment.paymentMethod,
+        transactionId: updatedPayment.transactionId,
+        subscriptionType: updatedSubscription.type,
+      }),
+    });
+
+    // eslint-disable-next-line no-console
+    console.log(`Email sent to ${updatedUser.email}`);
   } catch (err) {
     await session.abortTransaction();
     session.endSession();

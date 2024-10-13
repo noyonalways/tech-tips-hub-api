@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Payment Confirmation</title>
+</head>
+
+<body
+  style="margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; color: #333333; background-color: #f7f7f7;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%"
+    style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+    <tr>
+      <td style="padding: 40px 30px; text-align: center; background-color: #00d351;">
+        <h1 style="color: #ffffff; margin: 0;">
+          <img src="https://cdn-icons-png.flaticon.com/128/190/190411.png" alt="Check"
+            style="vertical-align: middle; margin-right: 10px; width: 30px; height: 30px;">
+          Payment Successful
+        </h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 40px 10px;">
+        <h2 style="margin: 0 0 20px; font-size: 24px; color: #333333;">Payment Confirmation</h2>
+        <p style="margin: 0 0 20px;">Dear {fullName},</p>
+        <p style="margin: 0 0 20px;">Thank you for your payment. Your transaction was successful.</p>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px;">
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
+              <strong>
+                <img src="https://cdn-icons-png.flaticon.com/128/471/471662.png" alt="Info"
+                  style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
+                Status:
+              </strong>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">{status}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
+              <strong>
+                <img src="https://cdn-icons-png.flaticon.com/128/2454/2454282.png" alt="Money"
+                  style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
+                Amount:
+              </strong>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">{amount} {currency}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
+              <strong>
+                <img src="https://cdn-icons-png.flaticon.com/128/9368/9368835.png" alt="Fingerprint"
+                  style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
+                Transaction Id:
+              </strong>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">{transactionId}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
+              <strong>
+                <img src="https://cdn-icons-png.flaticon.com/128/633/633611.png" alt="Credit Card"
+                  style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
+                Payment Method:
+              </strong>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">{paymentMethod}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
+              <strong>
+                <img src="https://cdn-icons-png.flaticon.com/128/11282/11282361.png" alt="Sync"
+                  style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
+                Subscription:
+              </strong>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">{subscriptionType}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
+              <strong>
+                <img src="https://cdn-icons-png.flaticon.com/128/2693/2693507.png" alt="Calendar Plus"
+                  style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
+                Subscription Start:
+              </strong>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">{subscriptionStartDate}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee;">
+              <strong>
+                <img src="https://cdn-icons-png.flaticon.com/128/2693/2693507.png" alt="Calendar Minus"
+                  style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
+                Subscription End:
+              </strong>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eeeeee; text-align: right;">{subscriptionEndDate}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0;">
+              <strong>
+                <img src="https://cdn-icons-png.flaticon.com/128/2693/2693507.png" alt="Calendar"
+                  style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
+                Payment Date:
+              </strong>
+            </td>
+            <td style="padding: 10px 0; text-align: right;">{currentDate}</td>
+          </tr>
+        </table>
+        <p style="margin: 0 0 20px;">If you have any questions, please contact our support team.</p>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td>
+              <a href="https://tech-tips-hub.noyonrahman.xyz/profile/{username}"
+                style="display: inline-block; padding: 12px 20px; background-color: #00d351; color: #ffffff; text-decoration: none; border-radius: 4px;">
+                <img src="https://cdn-icons-png.flaticon.com/128/17707/17707812.png" alt="User"
+                  style="vertical-align: middle; margin-right: 10px; width: 18px; height: 18px;">
+                View Account
+              </a>
+            </td>
+
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px 30px; text-align: center; font-size: 14px; color: #666666; background-color: #f0f0f0;">
+        <p>&copy; 2024 Tech Tips Hub. All rights reserved.</p>
+        <p>
+          <a target="_blank" href="https://facebook.com/noyonalways"
+            style="color: #00d351; text-decoration: none; margin: 0 10px;">
+            <img src="https://cdn-icons-png.flaticon.com/128/733/733547.png" alt="Facebook"
+              style="width: 24px; height: 24px;">
+          </a>
+          <a target="_blank" href="https://twitter.com/noyonalways"
+            style="color: #00d351; text-decoration: none; margin: 0 10px;">
+            <img src="https://cdn-icons-png.flaticon.com/128/733/733579.png" alt="Twitter"
+              style="width: 24px; height: 24px;">
+          </a>
+          <a target="_blank" href="https://instagram.com/noyonalways"
+            style="color: #00d351; text-decoration: none; margin: 0 10px;">
+            <img src="https://cdn-icons-png.flaticon.com/128/2111/2111463.png" alt="Instagram"
+              style="width: 24px; height: 24px;">
+          </a>
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>

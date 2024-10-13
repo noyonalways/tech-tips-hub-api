@@ -101,15 +101,17 @@ const userSchema = new Schema<IUser, IUserModel>(
       },
       default: "Active",
     },
-    followers: {
-      type: [Schema.Types.ObjectId],
-      ref: "User",
-      default: [],
+    totalFollowers: {
+      type: Number,
+      default: 0,
     },
-    following: {
-      type: [Schema.Types.ObjectId],
-      ref: "User",
-      default: [],
+    totalFollowing: {
+      type: Number,
+      default: 0,
+    },
+    totalPosts: {
+      type: Number,
+      default: 0,
     },
     dateOfBirth: {
       type: Date,
@@ -146,6 +148,10 @@ userSchema.pre("findOne", function (next) {
 });
 
 userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next(); // Skip hashing if the password hasn't been modified
+  }
+
   this.password = await bcrypt.hash(
     this.password,
     Number(config.bcrypt_salt_round),

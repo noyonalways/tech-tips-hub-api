@@ -4,17 +4,27 @@ import mongoose from "mongoose";
 import { QueryBuilder } from "../../builder";
 import { AppError } from "../../errors";
 import Category from "../category/category.model";
-import Subscription from "../subscription/subscription.model";
+import { IComment } from "../comment/comment.interface";
+import Comment from "../comment/comment.model";
 import User from "../user/user.model";
+import View from "../view/view.model";
+import Vote from "../vote/vote.model";
 import { postSearchableFields } from "./post.constant";
 import { IPost } from "./post.interface";
 import Post from "./post.model";
-import { generateUniqueSlug } from "./post.utils";
+import { generateUniqueSlug, isPremiumSubscriptionActive } from "./post.utils";
 
 const create = async (userData: JwtPayload, payload: IPost) => {
   const user = await User.findOne({ email: userData.email });
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (!user.isPremiumUser && payload.isPremium) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only premium membership user can post premium posts, please subscribe premium subscription first",
+    );
   }
 
   const category = await Category.findById(payload.category);
@@ -50,11 +60,30 @@ const create = async (userData: JwtPayload, payload: IPost) => {
       throw new AppError(httpStatus.BAD_REQUEST, "Failed to update category");
     }
 
+    // Increment total post count 1
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $inc: { totalPosts: 1 } }, // Increment the postCount field by 1
+      { session, new: true }, // Pass session and return the updated category
+    );
+
+    if (!updatedUser) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Failed to update User");
+    }
+
     // Commit the transaction and end the session
     await session.commitTransaction();
     await session.endSession();
 
-    return (await newPost[0].populate("author")).populate("category");
+    return (
+      await newPost[0].populate({
+        path: "author",
+        select: "fullName email username profilePicture",
+      })
+    ).populate({
+      path: "category",
+      select: "name description postCount",
+    });
   } catch (err) {
     // Abort transaction in case of an error
     await session.abortTransaction();
@@ -114,11 +143,17 @@ const getPostByProperty = async (key: string, value: string) => {
     if (!mongoose.Types.ObjectId.isValid(value)) {
       throw new AppError(httpStatus.BAD_REQUEST, "Invalid post Id");
     }
-    post = await Post.findById(value).populate("author").populate("category");
+    post = await Post.findById(value).populate("author").populate({
+      path: "category",
+      select: "name description postCount",
+    });
   } else {
     post = await Post.findOne({ [key]: value })
       .populate("author")
-      .populate("category");
+      .populate({
+        path: "category",
+        select: "name description postCount",
+      });
   }
 
   if (!post) {
@@ -129,67 +164,321 @@ const getPostByProperty = async (key: string, value: string) => {
 };
 
 // get premium single post
-const getPremiumSinglePost = async (userData: JwtPayload, id: string) => {
+const getPremiumSinglePost = async (userData: JwtPayload, slug: string) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Get the current logged-in user
+    const currentLoggedInUser = await User.findOne({
+      email: userData.email,
+    }).session(session);
+
+    if (!currentLoggedInUser) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    // Fetch the post by its ID
+    const post = await Post.findOne({ slug })
+      .populate({
+        path: "author",
+      })
+      .populate({
+        path: "category",
+        select: "name description postCount",
+      })
+      .session(session);
+
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Allow access if the current user is the post author
+    if (post.author._id.equals(currentLoggedInUser._id)) {
+      await session.commitTransaction();
+      session.endSession();
+      return post; // No need to record views for the author
+    }
+
+    // Check if the user is a premium user
+    const isPremiumUser = currentLoggedInUser.isPremiumUser;
+    if (!isPremiumUser) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "Premium content access is for premium members only",
+      );
+    }
+
+    // Verify if the user's subscription is active
+    const subscriptionActive = await isPremiumSubscriptionActive(
+      currentLoggedInUser._id,
+    );
+
+    if (!subscriptionActive) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "Your subscription is inactive or expired. Please renew to access premium content.",
+      );
+    }
+
+    // Ensure the user has not already viewed the post
+    const existingView = await View.findOne({
+      post: post._id,
+      user: currentLoggedInUser._id,
+    }).session(session);
+
+    if (!existingView) {
+      // Record the view if it's a new view by the user (excluding the author)
+      await View.create([{ post: post._id, user: currentLoggedInUser._id }], {
+        session,
+      });
+
+      // Increment the view count in the post
+      post.totalViews += 1;
+      await post.save({ session });
+    }
+
+    // Commit transaction and return the post
+    await session.commitTransaction();
+    session.endSession();
+
+    return post;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+// vote on post
+const voteOnPost = async (
+  userData: JwtPayload,
+  postId: string,
+  voteType: "upvote" | "downvote",
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Validate the voteType
+    if (!["upvote", "downvote"].includes(voteType)) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Invalid vote type");
+    }
+
+    // Get the current logged-in user
+    const currentLoggedInUser = await User.findOne({
+      email: userData.email,
+    }).session(session);
+
+    if (!currentLoggedInUser) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    // Fetch the post by its ID
+    const post = await Post.findById(postId).session(session);
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Ensure the user is not the author of the post (skip author's votes if necessary)
+    if (post.author.equals(currentLoggedInUser._id)) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "Author cannot vote on their own post",
+      );
+    }
+
+    // Find if the user has already voted on this post
+    const existingVote = await Vote.findOne({
+      post: post._id,
+      user: currentLoggedInUser._id,
+    }).session(session);
+
+    if (existingVote) {
+      if (existingVote.type === voteType) {
+        // If the user clicks the same vote type (toggle functionality)
+        await existingVote.deleteOne({ session });
+
+        if (voteType === "upvote") {
+          post.upVotes -= 1;
+        } else {
+          post.downVotes -= 1;
+        }
+      } else {
+        // If the user is switching their vote (from upvote to downvote or vice versa)
+        existingVote.type = voteType;
+        await existingVote.save({ session });
+
+        if (voteType === "upvote") {
+          post.upVotes += 1;
+          post.downVotes -= 1;
+        } else {
+          post.downVotes += 1;
+          post.upVotes -= 1;
+        }
+      }
+    } else {
+      // If no existing vote, create a new vote
+      await Vote.create(
+        [
+          {
+            user: currentLoggedInUser._id,
+            post: post._id,
+            type: voteType,
+          },
+        ],
+        { session },
+      );
+
+      // Increment upvotes or downvotes on the post
+      if (voteType === "upvote") {
+        post.upVotes += 1;
+      } else {
+        post.downVotes += 1;
+      }
+    }
+
+    // Save the post after updating votes
+    await post.save({ session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return post; // Return the updated post with vote counts
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+// comment on post with transaction
+const commentOnPost = async (
+  userData: JwtPayload,
+  postId: string,
+  payload: IComment,
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    // Find the current logged-in user
+    const currentLoggedInUser = await User.findOne({
+      email: userData.email,
+    }).session(session);
+
+    if (!currentLoggedInUser) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    // Fetch the post by its ID
+    const post = await Post.findById(postId).session(session);
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Create a new comment
+    const comment = await Comment.create(
+      [
+        {
+          ...payload,
+          user: currentLoggedInUser._id,
+          post: post._id,
+        },
+      ],
+      { session },
+    );
+
+    // Increment the totalComments field on the post
+    post.totalComments += 1;
+    await post.save({ session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Find and populate the comment with specific fields from user and post
+    return await Comment.findById(comment[0]._id)
+      .populate({
+        path: "user",
+        select: "fullName email profilePicture",
+      })
+      .populate({
+        path: "post",
+        select: "title category slug",
+      });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+// get all comments by post id
+const getAllCommentsByPostId = async (
+  userData: JwtPayload,
+  postId: string,
+  query: Record<string, unknown>,
+) => {
   const currentLoggedInUser = await User.findOne({ email: userData.email });
   if (!currentLoggedInUser) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
   // Fetch the post by its ID
-  const post = await Post.findById(id).populate("author").populate("category");
+  const post = await Post.findById(postId);
   if (!post) {
     throw new AppError(httpStatus.NOT_FOUND, "Post not found");
   }
 
-  // If the logged-in user is the author of the post, allow access without checking premium status
-  if (post.author._id.equals(currentLoggedInUser._id)) {
-    return post;
+  const commentQuery = new QueryBuilder(
+    Comment.find({ post: post._id })
+      .populate({
+        path: "user",
+        select: "fullName email username profilePicture", // Select only specific user fields
+      })
+      .populate({
+        path: "post",
+        select: "title slug", // Select specific post fields
+      }),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await commentQuery.modelQuery;
+  const meta = await commentQuery.countTotal();
+
+  return { result, meta };
+};
+
+// get all posts by user id
+const getAllPostsByUserId = async (
+  userId: string,
+  query: Record<string, unknown>,
+) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  // If the logged-in user is not the author, check if they are a premium member
-  if (!currentLoggedInUser.isPremiumUser) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "Premium content access is only for premium members",
-    );
-  }
+  const postQuery = new QueryBuilder(
+    Post.find({ author: user._id }).populate("author").populate("category"),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
 
-  // Fetch the user's current subscription
-  const currentSubscription = await Subscription.findOne({
-    user: currentLoggedInUser._id,
-  });
+  const result = await postQuery.modelQuery;
+  const meta = await postQuery.countTotal();
 
-  // Check if the subscription exists
-  if (!currentSubscription) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "You do not have an active subscription. Please subscribe to access premium content.",
-    );
-  }
-
-  // Check if the subscription is active and not expired
-  const currentDate = new Date();
-  if (
-    currentSubscription.status !== "Active" ||
-    currentDate < new Date(currentSubscription.startDate) ||
-    currentDate > new Date(currentSubscription.endDate)
-  ) {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "Your premium subscription has expired or is not active. Please renew your subscription.",
-    );
-  }
-
-  // Increment the view count only if the user has not viewed this post before
-  const hasViewed = post.viewedBy.includes(currentLoggedInUser._id);
-  if (!hasViewed) {
-    await Post.findByIdAndUpdate(id, {
-      $inc: { views: 1 },
-      $push: { viewedBy: currentLoggedInUser._id },
-    });
-  }
-
-  return post;
+  return { result, meta };
 };
 
 export const postService = {
@@ -198,4 +487,8 @@ export const postService = {
   getLoggedInUserPosts,
   getPremiumSinglePost,
   getPostByProperty,
+  voteOnPost,
+  commentOnPost,
+  getAllCommentsByPostId,
+  getAllPostsByUserId,
 };

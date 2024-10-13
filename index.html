@@ -6,30 +6,98 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reset Password</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-  <div class="bg-white p-8 rounded-lg shadow-lg w-96">
-    <h2 class="text-2xl font-bold mb-6 text-center">Reset Your Password</h2>
-    <form id="reset-password-form" class="space-y-6">
-      <div>
-        <label for="new-password" class="block text-sm font-medium text-gray-700">New Password</label>
-        <input type="password" id="new-password" name="newPassword" required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        <div id="new-password-error" class="text-red-500 text-sm mt-1"></div>
+<body class="lg:bg-gray-100 bg-white">
+  <!-- Navbar -->
+  <header class="bg-white px-2">
+    <nav class="max-w-4xl mx-auto flex justify-between items-center py-4 shadow-sm">
+      <a target="_blank" href="https://tech-tips-hub.noyonrahman.xyz" class="text-2xl font-bold text-indigo-600">Tech
+        Tips Hub</a>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div
+      class="container mx-auto flex justify-center lg:items-center lg:h-[calc(100vh-140px)] h-[calc(100vh-290px)] mt-24 lg:mt-0">
+      <div id="reset-container" class="bg-white p-4 lg:p-8 rounded-lg lg:shadow-lg w-96">
+        <h2 class="text-2xl font-bold mb-6 text-center">Reset Your Password</h2>
+        <form id="reset-password-form" class="space-y-6">
+          <div class="space-y-2 relative">
+            <label for="new-password" class="block text-sm font-medium text-gray-700">New Password</label>
+            <input type="password" id="new-password" name="newPassword" required
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <div id="new-password-error" class="text-red-500 text-sm mt-1"></div>
+            <button type="button" id="toggle-new-password"
+              class="absolute top-[28px] right-2 text-gray-600 focus:outline-none">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <div class="space-y-2 relative">
+            <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+            <input type="password" id="confirm-password" name="confirmPassword" required
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <button type="button" id="toggle-confirm-password"
+              class="absolute top-[28px] right-2 text-gray-600 focus:outline-none">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <button type="submit"
+            class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Reset
+            Password</button>
+        </form>
+        <p id="message" class="mt-3 text-center"></p>
+
+        <!-- Expiration Warning -->
+        <p class="mt-4 text-center text-sm text-gray-500">
+          <i class="fas fa-exclamation-triangle text-yellow-500"></i> The password reset link is valid for 30 minutes
+          only. Please reset your password before the link expires.
+        </p>
       </div>
-      <div>
-        <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-        <input type="password" id="confirm-password" name="confirmPassword" required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-      </div>
-      <button type="submit"
-        class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Reset
-        Password</button>
-    </form>
-    <p id="message" class="mt-3 text-center"></p>
-  </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white shadow mt-6 py-4">
+    <div class="container mx-auto text-center">
+      <p class="text-gray-500 text-sm">© 2024 Tech Tips Hub. All rights reserved.</p>
+    </div>
+  </footer>
+
   <script>
+    // Toggle password visibility
+    document.getElementById('toggle-new-password').addEventListener('click', function () {
+      const newPasswordInput = document.getElementById('new-password');
+      const newPasswordIcon = this.querySelector('i');
+      if (newPasswordInput.type === 'password') {
+        newPasswordInput.type = 'text';
+        newPasswordIcon.classList.remove('fa-eye');
+        newPasswordIcon.classList.add('fa-eye-slash');
+      } else {
+        newPasswordInput.type = 'password';
+        newPasswordIcon.classList.remove('fa-eye-slash');
+        newPasswordIcon.classList.add('fa-eye');
+      }
+    });
+
+    document.getElementById('toggle-confirm-password').addEventListener('click', function () {
+      const confirmPasswordInput = document.getElementById('confirm-password');
+      const confirmPasswordIcon = this.querySelector('i');
+      if (confirmPasswordInput.type === 'password') {
+        confirmPasswordInput.type = 'text';
+        confirmPasswordIcon.classList.remove('fa-eye');
+        confirmPasswordIcon.classList.add('fa-eye-slash');
+      } else {
+        confirmPasswordInput.type = 'password';
+        confirmPasswordIcon.classList.remove('fa-eye-slash');
+        confirmPasswordIcon.classList.add('fa-eye');
+      }
+    });
+
     document.getElementById('reset-password-form').addEventListener('submit', async function (e) {
       e.preventDefault();
 
@@ -44,7 +112,7 @@
 
       if (newPassword !== confirmPassword) {
         messageDiv.textContent = "Passwords do not match!";
-        messageDiv.classList.add("text-red-500")
+        messageDiv.classList.add("text-red-500");
         return;
       }
 
@@ -52,18 +120,14 @@
       const token = urlParams.get('token');
       const email = urlParams.get('email');
 
-      console.log(token);
-      console.log(email);
-      console.log(newPassword);
-
       if (!token || !email) {
         messageDiv.textContent = "Invalid or missing token.";
-        messageDiv.classList.add("text-red-500")
+        messageDiv.classList.add("text-red-500");
         return;
       }
 
       try {
-        const response = await fetch('http://localhost:5000/api/v1/auth/reset-password', {
+        const response = await fetch('https://tech-tips-hub-api.noyonrahman.xyz/api/v1/auth/reset-password', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -77,31 +141,45 @@
 
         if (response.ok) {
           const res = await response.json();
-          messageDiv.textContent = res?.message;
-          messageDiv.classList.add("text-green-500")
+
+          // Replace the form content with a success message
+          const resetContainer = document.getElementById('reset-container');
+          resetContainer.innerHTML = `
+            <div class="text-center">
+              <i class="fas fa-check-circle text-green-500 text-5xl"></i>
+              <h3 class="text-2xl font-bold text-green-500 mt-4">Success!</h3>
+              <p class="mt-2 text-gray-700">${res.message}</p>
+              <p class="mt-4 text-gray-600">You can now log in with your new password.</p>
+              <a target="_blank" href="https://tech-tips-hub.noyonrahman.xyz/login" class="block mt-6 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md">Go to Login</a>
+            </div>
+          `;
+
+          // Reset the browser URL (remove token and email from the query string)
+          window.history.pushState({}, document.title, window.location.pathname);
+
         } else {
           const error = await response.json();
           if (error.errorSources) {
             error.errorSources.forEach(err => {
               if (err.path === 'newPassword') {
-                newPasswordErrorDiv.textContent = err.message.charAt(0).toUpperCase() + err.message.slice(1)
-                // f;
+                newPasswordErrorDiv.textContent = err.message.charAt(0).toUpperCase() + err.message.slice(1);
               } else {
                 messageDiv.textContent += `${err.message}\n`;
               }
             });
-            messageDiv.classList.add("text-red-500")
+            messageDiv.classList.add("text-red-500");
           } else {
             messageDiv.textContent = `Error: ${error.message}`;
-            messageDiv.classList.add("text-red-500")
+            messageDiv.classList.add("text-red-500");
           }
         }
       } catch (error) {
         messageDiv.textContent = "An error occurred. Please try again.";
-        messageDiv.classList.add("text-red-500")
+        messageDiv.classList.add("text-red-500");
       }
     });
   </script>
+
 </body>
 
 </html>

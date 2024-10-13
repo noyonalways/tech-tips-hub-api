@@ -15,8 +15,7 @@ export interface IPost extends Document {
   isPremium: boolean;
   upVotes: number;
   downVotes: number;
-  views: number;
-  viewedBy: Types.ObjectId[];
-  comments: Types.ObjectId[];
+  totalViews: number;
+  totalComments: number;
   isDeleted: boolean;
 }
