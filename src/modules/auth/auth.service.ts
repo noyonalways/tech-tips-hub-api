@@ -85,6 +85,7 @@ const login = async (payload: IUser) => {
     name: user.fullName,
     email: user.email,
     role: user.role,
+    isPremiumUser: user.isPremiumUser,
   };
 
   const accessToken = User.createToken(
@@ -303,6 +304,7 @@ const generateNewAccessToken = async (refreshToken: string) => {
     name: user.fullName,
     email: user.email,
     role: user.role,
+    isPremiumUser: user.isPremiumUser,
   };
 
   const accessToken = User.createToken(
