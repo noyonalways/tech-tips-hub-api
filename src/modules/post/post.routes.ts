@@ -38,9 +38,9 @@ postRouter.get(
   postController.getLoggedInUserPosts,
 );
 
-// get single post by post id
+// get single post by post slug
 postRouter.get(
-  "/:id",
+  "/:slug",
   // access only free blog post
   postController.getFreeSinglePost,
   auth(USER_ROLE.USER),
@@ -95,5 +95,8 @@ postRouter.get(
   auth(USER_ROLE.USER),
   postController.getAllCommentsByPostId,
 );
+
+// get all posts by user id
+postRouter.get("/users/:userId", postController.getAllPostsByUserId);
 
 export default postRouter;

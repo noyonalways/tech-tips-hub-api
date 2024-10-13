@@ -42,8 +42,8 @@ const getLoggedInUserPosts = catchAsync(async (req, res) => {
 
 // get access free blog post if premium then pass to next controller / middleware
 const getFreeSinglePost = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-  const post = await postService.getPostByProperty("_id", id);
+  const { slug } = req.params;
+  const post = await postService.getPostByProperty("slug", slug);
 
   if (!post.isPremium) {
     return sendResponse(res, {
@@ -58,8 +58,8 @@ const getFreeSinglePost = catchAsync(async (req, res, next) => {
 });
 
 const getPremiumSinglePost = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  const result = await postService.getPremiumSinglePost(req.user, id);
+  const { slug } = req.params;
+  const result = await postService.getPremiumSinglePost(req.user, slug);
 
   sendResponse(res, {
     success: true,
@@ -145,6 +145,23 @@ const getAllCommentsByPostId = catchAsync(async (req, res) => {
   });
 });
 
+// get all posts by user id
+const getAllPostsByUserId = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const { result, meta } = await postService.getAllPostsByUserId(
+    userId,
+    req.query,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Posts retrieved successfully",
+    meta,
+    data: result,
+  });
+});
+
 export const postController = {
   create,
   getAll,
@@ -154,4 +171,5 @@ export const postController = {
   voteOnPost,
   commentOnPost,
   getAllCommentsByPostId,
+  getAllPostsByUserId,
 };

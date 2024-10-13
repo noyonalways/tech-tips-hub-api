@@ -20,7 +20,7 @@ const create = async (userData: JwtPayload, payload: IPost) => {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  if (!user.isPremiumUser) {
+  if (!user.isPremiumUser && payload.isPremium) {
     throw new AppError(
       httpStatus.FORBIDDEN,
       "Only premium membership user can post premium posts, please subscribe premium subscription first",
@@ -143,22 +143,13 @@ const getPostByProperty = async (key: string, value: string) => {
     if (!mongoose.Types.ObjectId.isValid(value)) {
       throw new AppError(httpStatus.BAD_REQUEST, "Invalid post Id");
     }
-    post = await Post.findById(value)
-      .populate({
-        path: "author",
-        select:
-          "fullName email profilePicture totalFollowers totalFollowing username",
-      })
-      .populate({
-        path: "category",
-        select: "name description postCount",
-      });
+    post = await Post.findById(value).populate("author").populate({
+      path: "category",
+      select: "name description postCount",
+    });
   } else {
     post = await Post.findOne({ [key]: value })
-      .populate({
-        path: "author",
-        select: "fullName email profilePicture",
-      })
+      .populate("author")
       .populate({
         path: "category",
         select: "name description postCount",
@@ -173,7 +164,7 @@ const getPostByProperty = async (key: string, value: string) => {
 };
 
 // get premium single post
-const getPremiumSinglePost = async (userData: JwtPayload, postId: string) => {
+const getPremiumSinglePost = async (userData: JwtPayload, slug: string) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -188,11 +179,9 @@ const getPremiumSinglePost = async (userData: JwtPayload, postId: string) => {
     }
 
     // Fetch the post by its ID
-    const post = await Post.findById(postId)
+    const post = await Post.findOne({ slug })
       .populate({
         path: "author",
-        select:
-          "fullName email profilePicture totalFollowers totalFollowing username",
       })
       .populate({
         path: "category",
@@ -467,6 +456,31 @@ const getAllCommentsByPostId = async (
   return { result, meta };
 };
 
+// get all posts by user id
+const getAllPostsByUserId = async (
+  userId: string,
+  query: Record<string, unknown>,
+) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const postQuery = new QueryBuilder(
+    Post.find({ author: user._id }).populate("author").populate("category"),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await postQuery.modelQuery;
+  const meta = await postQuery.countTotal();
+
+  return { result, meta };
+};
+
 export const postService = {
   create,
   getAll,
@@ -476,4 +490,5 @@ export const postService = {
   voteOnPost,
   commentOnPost,
   getAllCommentsByPostId,
+  getAllPostsByUserId,
 };
