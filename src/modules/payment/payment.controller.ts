@@ -14,13 +14,13 @@ const paymentConfirmation = catchAsync(async (req, res) => {
     return res
       .status(200)
       .redirect(
-        `${config.client_base_url}/subscription/payment/success?transactionId=${transactionId}`,
+        `${config.client_base_url}/subscriptions/payment/success?transactionId=${transactionId}`,
       );
   } else {
     res
       .status(400)
       .redirect(
-        `${config.client_base_url}/subscription/payment/failed?transactionId=${transactionId}`,
+        `${config.client_base_url}/subscriptions/payment/failed?transactionId=${transactionId}`,
       );
   }
 });
@@ -34,7 +34,7 @@ const paymentFailed = catchAsync(async (req, res) => {
   res
     .status(200)
     .redirect(
-      `${config.client_base_url}/subscription/payment/failed?transactionId=${transactionId}`,
+      `${config.client_base_url}/subscriptions/payment/failed?transactionId=${transactionId}`,
     );
 });
 
@@ -47,7 +47,7 @@ const paymentCancelled = catchAsync(async (req, res) => {
   res
     .status(200)
     .redirect(
-      `${config.client_base_url}/subscription/payment/cancel?transactionId=${transactionId}`,
+      `${config.client_base_url}/subscriptions/payment/cancel?transactionId=${transactionId}`,
     );
 });
 
