@@ -43,7 +43,7 @@ postRouter.get(
   "/:slug",
   // access only free blog post
   postController.getFreeSinglePost,
-  auth(USER_ROLE.USER),
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   // access premium blog post
   postController.getPremiumSinglePost,
 );
