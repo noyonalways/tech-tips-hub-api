@@ -65,6 +65,13 @@ userRouter.delete(
   userController.unfollowUser,
 );
 
+// check the follow status
+userRouter.get(
+  "/:id/follow-status",
+  auth(USER_ROLE.USER),
+  userController.getFollowStatus,
+);
+
 // get current logged is user followers
 userRouter.get(
   "/my-followers",

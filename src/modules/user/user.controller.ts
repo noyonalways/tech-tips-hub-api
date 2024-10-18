@@ -102,6 +102,19 @@ const unfollowUser = catchAsync(async (req, res) => {
   });
 });
 
+// get follow status
+const getFollowStatus = catchAsync(async (req, res) => {
+  const { id } = req.params; // user id want's to follow
+  const isFollowing = await userService.getFollowStatus(req.user, id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Follow status retrieved successfully",
+    data: { isFollowing },
+  });
+});
+
 // get current logged in user followers
 const getLoggedInUserFollowers = catchAsync(async (req, res) => {
   const { result, meta } = await userService.getLoggedInUserFollowers(
@@ -181,4 +194,5 @@ export const userController = {
   getFollowersByUserId,
   getFollowingByUserId,
   getSingleUserByUsername,
+  getFollowStatus,
 };

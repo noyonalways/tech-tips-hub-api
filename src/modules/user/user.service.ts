@@ -9,7 +9,6 @@ import { IUser, TSocialLink } from "./user.interface";
 import User from "./user.model";
 
 // get all users
-
 const getAllUsers = async (query: Record<string, unknown>) => {
   const userQuery = new QueryBuilder(User.find({}), query)
     .search(["fullName", "email", "username"])
@@ -24,6 +23,7 @@ const getAllUsers = async (query: Record<string, unknown>) => {
   return { result, meta };
 };
 
+// get single user by username
 const getSingleUserByUsername = async (username: string) => {
   const user = await User.findOne({ username });
   if (!user) {
@@ -33,6 +33,7 @@ const getSingleUserByUsername = async (username: string) => {
   return user;
 };
 
+// update user profile
 const updateProfile = async (userData: JwtPayload, payload: IUser) => {
   const updatedUser = await User.findOneAndUpdate(
     { email: userData.email },
@@ -50,6 +51,7 @@ const updateProfile = async (userData: JwtPayload, payload: IUser) => {
   return updatedUser;
 };
 
+// update user profile social links
 const updateSocialLinks = async (
   userData: JwtPayload,
   payload: TSocialLink[],
@@ -70,6 +72,7 @@ const updateSocialLinks = async (
   return updatedUser;
 };
 
+// block a user (admin only)
 const blockUser = async (id: string) => {
   const user = await User.findById(id);
   if (!user) {
@@ -87,6 +90,7 @@ const blockUser = async (id: string) => {
   );
 };
 
+// unblock a user (admin only)
 const unBlockUser = async (id: string) => {
   const user = await User.findById(id);
   if (!user) {
@@ -244,6 +248,36 @@ const unfollowUser = async (userData: JwtPayload, userIdToUnfollow: string) => {
   }
 };
 
+// check follow status
+const getFollowStatus = async (
+  userData: JwtPayload,
+  userIdToFollow: string,
+) => {
+  // Find current logged-in user
+  const currentLoggedInUser = await User.findOne({
+    email: userData.email,
+  });
+
+  if (!currentLoggedInUser) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // Find the user to follow
+  const userToFollow = await User.findById(userIdToFollow);
+  if (!userToFollow) {
+    throw new AppError(httpStatus.NOT_FOUND, "User to follow not found");
+  }
+
+  // Check if the current logged-in user is following the userToFollow
+  const followStatus = await Follower.findOne({
+    follower: currentLoggedInUser._id,
+    following: userIdToFollow,
+  });
+
+  // Return true if the follow relationship exists, otherwise false
+  return !!followStatus;
+};
+
 // get current logged in user followers
 const getLoggedInUserFollowers = async (
   userData: JwtPayload,
@@ -391,4 +425,5 @@ export const userService = {
   getFollowersByUserId,
   getFollowingByUserId,
   getSingleUserByUsername,
+  getFollowStatus,
 };
