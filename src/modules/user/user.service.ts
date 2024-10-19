@@ -363,7 +363,7 @@ const getFollowersByUserId = async (
     Follower.find({ following: user._id })
       .populate(
         "follower",
-        "fullName username email profilePicture totalFollowers totalFollowing",
+        "fullName username email profilePicture totalFollowers totalFollowing designation",
       )
       .select("follower"),
     query,
@@ -396,7 +396,7 @@ const getFollowingByUserId = async (
     Follower.find({ follower: user._id })
       .populate(
         "following",
-        "fullName username email profilePicture totalFollowers totalFollowing",
+        "fullName username email profilePicture totalFollowers totalFollowing designation",
       )
       .select("following"),
     query,
