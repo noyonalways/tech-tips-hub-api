@@ -193,6 +193,10 @@ const getPremiumSinglePost = async (userData: JwtPayload, slug: string) => {
       throw new AppError(httpStatus.NOT_FOUND, "Post not found");
     }
 
+    if (currentLoggedInUser.role === "Admin") {
+      return post;
+    }
+
     // Allow access if the current user is the post author
     if (post.author._id.equals(currentLoggedInUser._id)) {
       await session.commitTransaction();

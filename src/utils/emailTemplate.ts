@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import config from "../config";
 
 // payment success
 export const generatePaymentSuccessEmail = ({
@@ -141,7 +142,7 @@ export const generatePaymentSuccessEmail = ({
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td>
-              <a href="https://tech-tips-hub.noyonrahman.xyz/profile/${username}"
+              <a href="${config.client_base_url}/profile/@${username}"
                 style="display: inline-block; padding: 12px 20px; background-color: #00d351; color: #ffffff; text-decoration: none; border-radius: 4px;">
                 <img src="https://cdn-icons-png.flaticon.com/128/17707/17707812.png" alt="User"
                   style="vertical-align: middle; margin-right: 10px; width: 18px; height: 18px;">
@@ -305,7 +306,7 @@ export const generatePaymentFailedEmail = ({
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td>
-              <a href="https://tech-tips-hub.noyonrahman.xyz/profile/${username}"
+              <a href="${config.client_base_url}/profile/@${username}"
                 style="display: inline-block; padding: 12px 20px; background-color: #f44336; color: #ffffff; text-decoration: none; border-radius: 4px;">
                 <img src="https://cdn-icons-png.flaticon.com/128/1077/1077114.png" alt="User"
                   style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
@@ -461,7 +462,7 @@ export const generatePaymentCanceledEmail = ({
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td>
-              <a href="https://tech-tips-hub.noyonrahman.xyz/profile/${username}"
+              <a href="${config.client_base_url}/profile/@${username}"
                 style="display: inline-block; padding: 12px 20px; background-color: #ffa500; color: #ffffff; text-decoration: none; border-radius: 4px;">
                 <img src="https://cdn-icons-png.flaticon.com/128/1077/1077114.png" alt="User"
                   style="vertical-align: middle; margin-right: 10px; width: 16px; height: 16px;">
