@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import httpStatus from "http-status";
+import { QueryBuilder } from "../../builder";
 import { AppError } from "../../errors";
 import {
   generatePaymentCanceledEmail,
@@ -326,9 +327,27 @@ const getPaymentInfo = async (transactionId: string) => {
   return payment;
 };
 
+// get all payments (admin only)
+const getAllPayments = async (query: Record<string, unknown>) => {
+  const paymentQuery = new QueryBuilder(
+    Payment.find({}).populate("user").populate("subscription"),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await paymentQuery.modelQuery;
+  const meta = await paymentQuery.countTotal();
+
+  return { result, meta };
+};
+
 export const paymentService = {
   paymentConfirmation,
   paymentFailed,
   paymentCancelled,
   getPaymentInfo,
+  getAllPayments,
 };
