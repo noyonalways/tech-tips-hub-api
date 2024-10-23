@@ -6,6 +6,7 @@ import { AppError } from "../../errors";
 import Category from "../category/category.model";
 import { IComment } from "../comment/comment.interface";
 import Comment from "../comment/comment.model";
+import Follower from "../follower/follower.model";
 import User from "../user/user.model";
 import View from "../view/view.model";
 import Vote from "../vote/vote.model";
@@ -96,6 +97,53 @@ const create = async (userData: JwtPayload, payload: IPost) => {
 const getAll = async (query: Record<string, unknown>) => {
   const postQuery = new QueryBuilder(
     Post.find({}).populate("author").populate("category"),
+    query,
+  )
+    .search(postSearchableFields)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await postQuery.modelQuery;
+  const meta = await postQuery.countTotal();
+
+  return { result, meta };
+};
+
+// get following users posts
+const getFollowingUsersPosts = async (
+  userData: JwtPayload,
+  query: Record<string, unknown>,
+) => {
+  // Step 1: Find the current user by their email
+  const user = await User.findOne({ email: userData.email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // Step 2: Find the list of users that the current user is following
+  const following = await Follower.find({ follower: user._id }).select(
+    "following",
+  );
+
+  if (!following || following.length === 0) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "You are not following any users.",
+    );
+  }
+
+  // Step 3: Extract the user IDs of those being followed
+  const followingUserIds = following.map((f) => f.following);
+
+  // Step 4: Query the posts where the author is in the following list
+  const postQuery = new QueryBuilder(
+    Post.find({
+      author: { $in: followingUserIds },
+    })
+      .populate("author")
+      .populate("category"),
     query,
   )
     .search(postSearchableFields)
@@ -357,6 +405,36 @@ const voteOnPost = async (
   }
 };
 
+// get vote status
+const getVoteStatus = async (userData: JwtPayload, postId: string) => {
+  const user = await User.findOne({ email: userData.email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const post = await Post.findById(postId);
+  if (!post) {
+    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+  }
+
+  const existingVote = await Vote.findOne({
+    post: post._id,
+    user: user._id,
+  });
+
+  if (!existingVote) {
+    throw new AppError(httpStatus.NOT_FOUND, "Not Voted yet!");
+  }
+
+  // If the user has voted, return the vote type and relevant metadata
+  return {
+    status: "Voted",
+    voteType: existingVote.type, // "upvote" or "downvote"
+    postId: post._id,
+    userId: user._id,
+  };
+};
+
 // comment on post with transaction
 const commentOnPost = async (
   userData: JwtPayload,
@@ -495,4 +573,6 @@ export const postService = {
   commentOnPost,
   getAllCommentsByPostId,
   getAllPostsByUserId,
+  getVoteStatus,
+  getFollowingUsersPosts,
 };

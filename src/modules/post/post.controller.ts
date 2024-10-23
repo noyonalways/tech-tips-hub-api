@@ -25,6 +25,22 @@ const getAll = catchAsync(async (req, res) => {
   });
 });
 
+// get following users posts
+const getFollowingUsersPosts = catchAsync(async (req, res) => {
+  const { result, meta } = await postService.getFollowingUsersPosts(
+    req.user,
+    req.query,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Posts retrieved successfully",
+    meta,
+    data: result,
+  });
+});
+
 const getLoggedInUserPosts = catchAsync(async (req, res) => {
   const { meta, result } = await postService.getLoggedInUserPosts(
     req.user,
@@ -69,32 +85,6 @@ const getPremiumSinglePost = catchAsync(async (req, res) => {
   });
 });
 
-// upvote a post
-// const upvotePost = catchAsync(async (req, res) => {
-//   const { id } = req.params;
-//   await postService.upvotePost(req.user, id);
-
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: httpStatus.OK,
-//     message: "message",
-//     data: "post",
-//   });
-// });
-
-// downvote a post
-// const downvotePost = catchAsync(async (req, res) => {
-//   const { id } = req.params;
-//   const { message, post } = await postService.downvotePost(req.user, id);
-
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: httpStatus.OK,
-//     message: message,
-//     data: post,
-//   });
-// });
-
 // vote
 const voteOnPost = catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -110,6 +100,19 @@ const voteOnPost = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: "Vote on post successfully updated",
+    data: result,
+  });
+});
+
+// get vote status
+const getVoteStatus = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await postService.getVoteStatus(req.user, id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Vote status retrieved successfully",
     data: result,
   });
 });
@@ -172,4 +175,6 @@ export const postController = {
   commentOnPost,
   getAllCommentsByPostId,
   getAllPostsByUserId,
+  getVoteStatus,
+  getFollowingUsersPosts,
 };
