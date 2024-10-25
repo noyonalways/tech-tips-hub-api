@@ -13,6 +13,22 @@ const subscribe = catchAsync(async (req, res) => {
   });
 });
 
+// get all subscriptions (admin only)
+const getAllSubscriptions = catchAsync(async (req, res) => {
+  const { result, meta } = await subscriptionService.getAllSubscriptions(
+    req.query,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Subscriptions retrieved successfully",
+    meta,
+    data: result,
+  });
+});
+
 export const subscriptionController = {
   subscribe,
+  getAllSubscriptions,
 };

@@ -1,5 +1,6 @@
 import httpStatus from "http-status";
 import { JwtPayload } from "jsonwebtoken";
+import { QueryBuilder } from "../../builder";
 import { AppError } from "../../errors";
 import Payment from "../payment/payment.model";
 import {
@@ -123,6 +124,24 @@ const subscribe = async (userData: JwtPayload, payload: ISubscription) => {
   }
 };
 
+// get all subscriptions (admin only)
+const getAllSubscriptions = async (query: Record<string, unknown>) => {
+  const paymentQuery = new QueryBuilder(
+    Subscription.find({}).populate("user"),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await paymentQuery.modelQuery;
+  const meta = await paymentQuery.countTotal();
+
+  return { result, meta };
+};
+
 export const subscriptionService = {
   subscribe,
+  getAllSubscriptions,
 };

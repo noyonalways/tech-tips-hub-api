@@ -13,4 +13,11 @@ subscriptionRouter.post(
   subscriptionController.subscribe,
 );
 
+// get all subscriptions (admin only)
+subscriptionRouter.get(
+  "/",
+  auth(USER_ROLE.ADMIN),
+  subscriptionController.getAllSubscriptions,
+);
+
 export default subscriptionRouter;

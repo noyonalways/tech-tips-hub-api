@@ -31,6 +31,13 @@ postRouter.post(
 // anyone can see all post on the feed
 postRouter.get("/", postController.getAll);
 
+// get following  users posts
+postRouter.get(
+  "/following-users",
+  auth(USER_ROLE.USER),
+  postController.getFollowingUsersPosts,
+);
+
 // get all current logged in user posts
 postRouter.get(
   "/my-posts",
@@ -48,17 +55,15 @@ postRouter.get(
   postController.getPremiumSinglePost,
 );
 
-// upvote a post
-// postRouter.put("/:id/upvote", auth(USER_ROLE.USER), postController.upvotePost);
-
+// vote on post
 postRouter.put("/:id/vote", auth(USER_ROLE.USER), postController.voteOnPost);
 
-// // downvote a post
-// postRouter.put(
-//   "/:id/downvote",
-//   auth(USER_ROLE.USER),
-//   postController.downvotePost,
-// );
+// vote status
+postRouter.get(
+  "/:id/vote-status",
+  auth(USER_ROLE.USER),
+  postController.getVoteStatus,
+);
 
 // comment on a post
 postRouter.post(

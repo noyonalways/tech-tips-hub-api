@@ -4,12 +4,13 @@ import { userService } from "./user.service";
 
 // get all users (admin only)
 const getAllUsers = catchAsync(async (req, res) => {
-  const result = await userService.getAllUsers(req.query);
+  const { result, meta } = await userService.getAllUsers(req.query);
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "All users retrieved successfully",
+    meta,
     data: result,
   });
 });
