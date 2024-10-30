@@ -134,7 +134,6 @@ const commentOnPost = catchAsync(async (req, res) => {
 const getAllCommentsByPostId = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { result, meta } = await postService.getAllCommentsByPostId(
-    req.user,
     id,
     req.query,
   );

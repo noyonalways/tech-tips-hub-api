@@ -253,7 +253,7 @@ const paymentCancelled = async (transactionId: string) => {
     const updatedSubscription = await Subscription.findOneAndUpdate(
       { transactionId: transactionId },
       {
-        status: SUBSCRIPTION_STATUS.PENDING,
+        status: SUBSCRIPTION_STATUS.CANCELED,
       },
       {
         session,

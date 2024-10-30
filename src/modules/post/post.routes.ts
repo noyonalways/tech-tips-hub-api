@@ -95,11 +95,7 @@ postRouter.post(
 );
 
 // get all comments by post id
-postRouter.get(
-  "/:id/comments",
-  auth(USER_ROLE.USER),
-  postController.getAllCommentsByPostId,
-);
+postRouter.get("/:id/comments", postController.getAllCommentsByPostId);
 
 // get all posts by user id
 postRouter.get("/users/:userId", postController.getAllPostsByUserId);

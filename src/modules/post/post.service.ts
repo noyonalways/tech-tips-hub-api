@@ -500,15 +500,9 @@ const commentOnPost = async (
 
 // get all comments by post id
 const getAllCommentsByPostId = async (
-  userData: JwtPayload,
   postId: string,
   query: Record<string, unknown>,
 ) => {
-  const currentLoggedInUser = await User.findOne({ email: userData.email });
-  if (!currentLoggedInUser) {
-    throw new AppError(httpStatus.NOT_FOUND, "User not found");
-  }
-
   // Fetch the post by its ID
   const post = await Post.findById(postId);
   if (!post) {
