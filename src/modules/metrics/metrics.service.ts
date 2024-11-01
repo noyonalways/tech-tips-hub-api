@@ -179,9 +179,10 @@ const dashboard = async () => {
     type: determineType(currentMonthUsers, lastMonthUsers),
   };
 
-  const totalPosts = await Post.countDocuments();
+  const totalPosts = await Post.countDocuments({ isDeleted: false });
   const currentMonthPosts = await Post.countDocuments({
     createdAt: { $gte: currentMonthStart },
+    isDeleted: false,
   });
   const lastMonthPosts = await Post.countDocuments({
     createdAt: {

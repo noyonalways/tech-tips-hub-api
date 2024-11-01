@@ -9,6 +9,7 @@ import { postValidationSchema } from "./post.validation";
 
 const postRouter: Router = Router();
 
+// write a post
 postRouter.post(
   "/",
   auth(USER_ROLE.USER),
@@ -53,6 +54,13 @@ postRouter.get(
   auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   // access premium blog post
   postController.getPremiumSinglePost,
+);
+
+// delete a post by post id;
+postRouter.delete(
+  "/:id/by-admin",
+  auth(USER_ROLE.ADMIN),
+  postController.deletePostByAdminUsingId,
 );
 
 // vote on post

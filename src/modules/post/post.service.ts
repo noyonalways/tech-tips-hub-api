@@ -3,6 +3,7 @@ import { JwtPayload } from "jsonwebtoken";
 import mongoose from "mongoose";
 import { QueryBuilder } from "../../builder";
 import { AppError } from "../../errors";
+import { deleteBlogEmailConfirmation, sendEmail } from "../../utils";
 import Category from "../category/category.model";
 import { IComment } from "../comment/comment.interface";
 import Comment from "../comment/comment.model";
@@ -557,6 +558,63 @@ const getAllPostsByUserId = async (
   return { result, meta };
 };
 
+// delete post by admin using id
+const deletePostByAdminUsingId = async (
+  id: string,
+  payload: Record<string, string>,
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    // Find the post and populate the author with specific fields
+    const post = await Post.findById(id)
+      .populate({ path: "author", select: "fullName email" })
+      .session(session);
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    const author = await User.findById(post?.author._id).session(session);
+    if (!author) {
+      throw new AppError(httpStatus.NOT_FOUND, "Author not found");
+    }
+
+    // Soft delete the post
+    post.isDeleted = true;
+    await post.save({ session });
+
+    // Soft delete associated comments, views, and votes
+    await Comment.deleteMany({ post: post._id }, { session });
+    await View.deleteMany({ post: post._id }, { session });
+    await Vote.deleteMany({ post: post._id }, { session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Send email notification to the author
+    await sendEmail({
+      to: {
+        name: author.fullName,
+        address: author.email,
+      },
+      subject: "Your blog post has been deleted",
+      html: deleteBlogEmailConfirmation(post.title, payload.reason),
+      text: "Your blog post has been deleted",
+    });
+
+    // eslint-disable-next-line no-console
+    console.log("Post soft-deleted, email sent successfully.");
+  } catch (error) {
+    // Abort the transaction in case of an error
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
 export const postService = {
   create,
   getAll,
@@ -569,4 +627,5 @@ export const postService = {
   getAllPostsByUserId,
   getVoteStatus,
   getFollowingUsersPosts,
+  deletePostByAdminUsingId,
 };

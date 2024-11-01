@@ -164,6 +164,20 @@ const getAllPostsByUserId = catchAsync(async (req, res) => {
   });
 });
 
+// delete a post by admin using admin
+const deletePostByAdminUsingId = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await postService.deletePostByAdminUsingId(id, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Post deleted successfully",
+    data: result,
+  });
+});
+
 export const postController = {
   create,
   getAll,
@@ -176,4 +190,5 @@ export const postController = {
   getAllPostsByUserId,
   getVoteStatus,
   getFollowingUsersPosts,
+  deletePostByAdminUsingId,
 };
