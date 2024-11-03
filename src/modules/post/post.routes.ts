@@ -63,6 +63,13 @@ postRouter.delete(
   postController.deletePostByAdminUsingId,
 );
 
+// delete a post by user using post id
+postRouter.delete(
+  "/:id",
+  auth(USER_ROLE.USER),
+  postController.deletePostByUserUsingId,
+);
+
 // vote on post
 postRouter.put("/:id/vote", auth(USER_ROLE.USER), postController.voteOnPost);
 

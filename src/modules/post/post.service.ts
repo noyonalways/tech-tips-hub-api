@@ -585,14 +585,21 @@ const deletePostByAdminUsingId = async (
     post.isDeleted = true;
     await post.save({ session });
 
-    // Soft delete associated comments, views, and votes
+    // delete associated comments, views, and votes
     await Comment.deleteMany({ post: post._id }, { session });
     await View.deleteMany({ post: post._id }, { session });
     await Vote.deleteMany({ post: post._id }, { session });
+    await Category.findByIdAndUpdate(
+      post.category,
+      {
+        $inc: { postCount: -1 },
+      },
+      { session },
+    );
 
     // Commit the transaction
     await session.commitTransaction();
-    session.endSession();
+    await session.endSession();
 
     // Send email notification to the author
     await sendEmail({
@@ -610,8 +617,68 @@ const deletePostByAdminUsingId = async (
   } catch (error) {
     // Abort the transaction in case of an error
     await session.abortTransaction();
-    session.endSession();
+    await session.endSession();
     throw error;
+  }
+};
+
+// delete post by user
+const deletePostByUserUsingId = async (
+  userData: JwtPayload,
+  postId: string,
+) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
+    const user = await User.findOne({ email: userData.email }).session(session);
+    if (!user) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    const post = await Post.findOne({ _id: postId, author: user._id }).session(
+      session,
+    );
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Soft delete the post
+    post.isDeleted = true;
+    const result = await post.save({ session });
+
+    // delete associated comments, views, and votes
+    await Comment.deleteMany({ post: post._id }, { session });
+    await View.deleteMany({ post: post._id }, { session });
+    await Vote.deleteMany({ post: post._id }, { session });
+    await Category.findByIdAndUpdate(
+      post.category,
+      {
+        $inc: { postCount: -1 },
+      },
+      { session },
+    );
+
+    // Commit the transaction
+    await session.commitTransaction();
+    await session.endSession();
+
+    // Send email notification to the author
+    // await sendEmail({
+    //   to: {
+    //     name: user.fullName,
+    //     address: user.email,
+    //   },
+    //   subject: "Your blog post has been deleted",
+    //   html: deleteBlogEmailConfirmation(post.title, "User deletion"),
+    //   text: "Your blog post has been deleted",
+    // });
+
+    return result;
+  } catch (err) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw err;
   }
 };
 
@@ -628,4 +695,5 @@ export const postService = {
   getVoteStatus,
   getFollowingUsersPosts,
   deletePostByAdminUsingId,
+  deletePostByUserUsingId,
 };
