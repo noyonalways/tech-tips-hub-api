@@ -514,9 +514,9 @@ const getAllCommentsByPostId = async (
   }
 
   const commentQuery = new QueryBuilder(
-    Post.find({}).populate("author").populate("category"),
+    Comment.find({ post: post._id }).populate("user").populate("post"),
     query,
-  ).search(postSearchableFields);
+  );
 
   // Await the filter() method
   await commentQuery.filter();
