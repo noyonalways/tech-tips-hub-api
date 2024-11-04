@@ -1,4 +1,5 @@
 import { FilterQuery, Query } from "mongoose";
+import Category from "../modules/category/category.model";
 
 class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
@@ -25,12 +26,30 @@ class QueryBuilder<T> {
     return this;
   }
 
-  filter() {
+  // New method to get the ObjectId for a category name
+  private async getCategoryIdByName(category: string) {
+    const foundedCategory = await Category.findOne({ name: category });
+    return foundedCategory;
+  }
+
+  // Make filter async to await category ID resolution
+  async filter() {
     const queryObj = { ...this.query }; // copy
     // Filtering
     const excludeFields = ["searchTerm", "sort", "limit", "page", "fields"];
 
     excludeFields.forEach((el) => delete queryObj[el]);
+
+    if (queryObj.category) {
+      const foundCat = await this.getCategoryIdByName(
+        queryObj.category as string,
+      );
+      if (foundCat) {
+        queryObj.category = foundCat._id.toString();
+      } else {
+        delete queryObj.category;
+      }
+    }
     this.modelQuery = this.modelQuery.find(queryObj as FilterQuery<T>);
 
     return this;

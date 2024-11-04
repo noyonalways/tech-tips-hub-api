@@ -99,14 +99,15 @@ const getAll = async (query: Record<string, unknown>) => {
   const postQuery = new QueryBuilder(
     Post.find({}).populate("author").populate("category"),
     query,
-  )
-    .search(postSearchableFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).search(postSearchableFields);
 
-  const result = await postQuery.modelQuery;
+  // Await the filter() method
+  await postQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  postQuery.sort().paginate().fields();
+
+  const result = await postQuery.modelQuery; // Await the results here
   const meta = await postQuery.countTotal();
 
   return { result, meta };
@@ -146,14 +147,15 @@ const getFollowingUsersPosts = async (
       .populate("author")
       .populate("category"),
     query,
-  )
-    .search(postSearchableFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).search(postSearchableFields);
 
-  const result = await postQuery.modelQuery;
+  // Await the filter() method
+  await postQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  postQuery.sort().paginate().fields();
+
+  const result = await postQuery.modelQuery; // Await the results here
   const meta = await postQuery.countTotal();
 
   return { result, meta };
@@ -172,14 +174,15 @@ const getLoggedInUserPosts = async (
   const postQuery = new QueryBuilder(
     Post.find({ author: user._id }).populate("author").populate("category"),
     query,
-  )
-    .search(postSearchableFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).search(postSearchableFields);
 
-  const result = await postQuery.modelQuery;
+  // Await the filter() method
+  await postQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  postQuery.sort().paginate().fields();
+
+  const result = await postQuery.modelQuery; // Await the results here
   const meta = await postQuery.countTotal();
 
   return { result, meta };
@@ -511,23 +514,17 @@ const getAllCommentsByPostId = async (
   }
 
   const commentQuery = new QueryBuilder(
-    Comment.find({ post: post._id })
-      .populate({
-        path: "user",
-        select: "fullName email username profilePicture", // Select only specific user fields
-      })
-      .populate({
-        path: "post",
-        select: "title slug", // Select specific post fields
-      }),
+    Post.find({}).populate("author").populate("category"),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).search(postSearchableFields);
 
-  const result = await commentQuery.modelQuery;
+  // Await the filter() method
+  await commentQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  commentQuery.sort().paginate().fields();
+
+  const result = await commentQuery.modelQuery; // Await the results here
   const meta = await commentQuery.countTotal();
 
   return { result, meta };
@@ -546,13 +543,15 @@ const getAllPostsByUserId = async (
   const postQuery = new QueryBuilder(
     Post.find({ author: user._id }).populate("author").populate("category"),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).search(postSearchableFields);
 
-  const result = await postQuery.modelQuery;
+  // Await the filter() method
+  await postQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  postQuery.sort().paginate().fields();
+
+  const result = await postQuery.modelQuery; // Await the results here
   const meta = await postQuery.countTotal();
 
   return { result, meta };

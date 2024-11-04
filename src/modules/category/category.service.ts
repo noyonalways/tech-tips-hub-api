@@ -15,12 +15,15 @@ const create = async (payload: ICategory) => {
 };
 
 const getAll = async (query: Record<string, unknown>) => {
-  const categoryQuery = new QueryBuilder(Category.find(), query)
-    .search(categorySearchableFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  const categoryQuery = new QueryBuilder(Category.find({}), query).search(
+    categorySearchableFields,
+  );
+
+  // Await the filter() method
+  await categoryQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  categoryQuery.sort().paginate().fields();
 
   const result = await categoryQuery.modelQuery;
   const meta = await categoryQuery.countTotal();
