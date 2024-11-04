@@ -332,11 +332,13 @@ const getAllPayments = async (query: Record<string, unknown>) => {
   const paymentQuery = new QueryBuilder(
     Payment.find({}).populate("user").populate("subscription"),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  );
+
+  // Await the filter() method
+  await paymentQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  paymentQuery.sort().paginate().fields();
 
   const result = await paymentQuery.modelQuery;
   const meta = await paymentQuery.countTotal();

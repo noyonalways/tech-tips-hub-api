@@ -10,12 +10,17 @@ import User from "./user.model";
 
 // get all users
 const getAllUsers = async (query: Record<string, unknown>) => {
-  const userQuery = new QueryBuilder(User.find({}), query)
-    .search(["fullName", "email", "username"])
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  const userQuery = new QueryBuilder(User.find({}), query).search([
+    "fullName",
+    "email",
+    "username",
+  ]);
+
+  // Await the filter() method
+  await userQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  userQuery.sort().paginate().fields();
 
   const result = await userQuery.modelQuery;
   const meta = await userQuery.countTotal();
@@ -290,7 +295,6 @@ const getLoggedInUserFollowers = async (
   if (!currentLoggedInUser) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
-
   const followersQuery = new QueryBuilder(
     Follower.find({ following: currentLoggedInUser._id })
       .populate(
@@ -299,11 +303,13 @@ const getLoggedInUserFollowers = async (
       )
       .select("follower"),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  );
+
+  // Await the filter() method
+  await followersQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  followersQuery.sort().paginate().fields();
 
   const result = await followersQuery.modelQuery;
   const meta = await followersQuery.countTotal();
@@ -334,11 +340,13 @@ const getLoggedInUserFollowing = async (
       )
       .select("following"),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  );
+
+  // Await the filter() method
+  await followingQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  followingQuery.sort().paginate().fields();
 
   const result = await followingQuery.modelQuery;
   const meta = await followingQuery.countTotal();
@@ -363,15 +371,17 @@ const getFollowersByUserId = async (
     Follower.find({ following: user._id })
       .populate(
         "follower",
-        "fullName username email profilePicture totalFollowers totalFollowing designation",
+        "fullName username email profilePicture totalFollowers totalFollowing",
       )
       .select("follower"),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  );
+
+  // Await the filter() method
+  await followersQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  followersQuery.sort().paginate().fields();
 
   const result = await followersQuery.modelQuery;
   const meta = await followersQuery.countTotal();
@@ -396,15 +406,17 @@ const getFollowingByUserId = async (
     Follower.find({ follower: user._id })
       .populate(
         "following",
-        "fullName username email profilePicture totalFollowers totalFollowing designation",
+        "fullName username email profilePicture totalFollowers totalFollowing",
       )
       .select("following"),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  );
+
+  // Await the filter() method
+  await followingQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  followingQuery.sort().paginate().fields();
 
   const result = await followingQuery.modelQuery;
   const meta = await followingQuery.countTotal();
