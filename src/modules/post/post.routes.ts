@@ -70,6 +70,32 @@ postRouter.delete(
   postController.deletePostByUserUsingId,
 );
 
+// update post by user using post id
+
+postRouter.put(
+  "/:id",
+  auth(USER_ROLE.USER),
+  multerUpload.single("image"),
+  (req: Request, _res: Response, next: NextFunction) => {
+    if (req.file?.path) {
+      req.body.data = JSON.stringify({
+        ...JSON.parse(req.body.data),
+        coverImage: req.file.path,
+      });
+    }
+
+    if (typeof req.body.data === "string" && req.body.data.trim()) {
+      req.body = { ...JSON.parse(req.body.data) };
+    } else {
+      req.body = {};
+    }
+
+    next();
+  },
+  validateRequest(postValidationSchema.update),
+  postController.updatePostByUserUsingId,
+);
+
 // vote on post
 postRouter.put("/:id/vote", auth(USER_ROLE.USER), postController.voteOnPost);
 

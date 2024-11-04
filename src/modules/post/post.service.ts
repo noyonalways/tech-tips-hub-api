@@ -681,6 +681,30 @@ const deletePostByUserUsingId = async (
   }
 };
 
+// update post by user using post id
+const updatePostByUserUsingId = async (
+  userData: JwtPayload,
+  postId: string,
+  payload: IPost,
+) => {
+  const user = await User.findOne({ email: userData.email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const post = await Post.findOneAndUpdate(
+    { _id: postId, author: user._id },
+    { ...payload },
+    { new: true, runValidators: true },
+  );
+
+  if (!post) {
+    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+  }
+
+  return post;
+};
+
 export const postService = {
   create,
   getAll,
@@ -695,4 +719,5 @@ export const postService = {
   getFollowingUsersPosts,
   deletePostByAdminUsingId,
   deletePostByUserUsingId,
+  updatePostByUserUsingId,
 };

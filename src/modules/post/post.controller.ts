@@ -192,6 +192,24 @@ const deletePostByUserUsingId = catchAsync(async (req, res) => {
   });
 });
 
+// delete post by user using post id
+const updatePostByUserUsingId = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await postService.updatePostByUserUsingId(
+    req.user,
+    id,
+    req.body,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Post updated successfully",
+    data: result,
+  });
+});
+
 export const postController = {
   create,
   getAll,
@@ -206,4 +224,5 @@ export const postController = {
   getFollowingUsersPosts,
   deletePostByAdminUsingId,
   deletePostByUserUsingId,
+  updatePostByUserUsingId,
 };

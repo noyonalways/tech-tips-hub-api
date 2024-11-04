@@ -60,6 +60,59 @@ const create = z.object({
     .strict(),
 });
 
+const update = z.object({
+  body: z
+    .object({
+      title: z
+        .string({
+          required_error: "Title is required",
+          invalid_type_error: "Title must be a string",
+        })
+        .optional(),
+      contentType: z
+        .enum([...PostContentType] as [string, ...string[]], {
+          required_error: "Content Type is required",
+          invalid_type_error: "Content Type must be a string",
+        })
+        .optional(),
+      content: z
+        .string({
+          required_error: "Content is required",
+          invalid_type_error: "Content must be a string",
+        })
+        .optional(),
+      coverImage: z
+        .string({
+          required_error: "Cover Image is required",
+          invalid_type_error: "Cover Image must be a string",
+        })
+        .optional(),
+      category: z
+        .string({
+          required_error: "Category Id is required",
+          invalid_type_error: "Category Id must be a string",
+        })
+        .refine((val) => mongoose.Types.ObjectId.isValid(val), {
+          message: "Invalid Category Id",
+        })
+        .optional(),
+      tags: z
+        .array(
+          z.string({
+            required_error: "Tag is required",
+            invalid_type_error: "Tag must be a string",
+          }),
+          {
+            required_error: "Tags is required",
+            invalid_type_error: "Tags must be an array of string",
+          },
+        )
+        .optional(),
+    })
+    .strict(),
+});
+
 export const postValidationSchema = {
   create,
+  update,
 };
