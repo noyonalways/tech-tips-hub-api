@@ -97,25 +97,105 @@
 - `/api/v1/payments/failed` - **POST** - Handle payment failure
 - `/api/v1/payments/canceled` - **GET** - Handle payment cancellation
 
-Here’s the updated list with TypeScript included:
-
 ### Tech Stack
 
-<div align="center">
+| Icon                                                                                                                   | Technology Name |
+| ---------------------------------------------------------------------------------------------------------------------- | --------------- |
+| ![Node.js](https://img.shields.io/static/v1?label=&message=Node.js&color=339933&logo=nodedotjs&logoColor=white)        | Node.js         |
+| ![Express](https://img.shields.io/static/v1?label=&message=Express&color=404D59)                                       | Express         |
+| ![TypeScript](https://img.shields.io/static/v1?label=&message=TypeScript&color=007ACC&logo=typescript&logoColor=white) | TypeScript      |
+| ![MongoDB](https://img.shields.io/static/v1?label=&message=MongoDB&color=47A248&logo=mongodb&logoColor=white)          | MongoDB         |
+| ![Bcrypt](https://img.shields.io/static/v1?label=&message=Bcrypt&color=EFCA00)                                         | Bcrypt          |
+| ![Zod](https://img.shields.io/static/v1?label=&message=Zod&color=3068b7&logo=zod&logoColor=white)                      | Zod             |
+| ![Nodemailer](https://img.shields.io/static/v1?label=&message=Nodemailer&color=005571&logo=npm&logoColor=white)        | Nodemailer      |
+| ![Multer](https://img.shields.io/static/v1?label=&message=Multer&color=34B7F1)                                         | Multer          |
+| ![Cloudinary](https://img.shields.io/static/v1?label=&message=Cloudinary&color=3A8E4D)                                 | Cloudinary      |
+| ![Axios](https://img.shields.io/static/v1?label=&message=Axios&color=5A29E3&logo=axios&logoColor=white)                | Axios           |
+| ![JWT](https://img.shields.io/static/v1?label=&message=JWT&color=000000&logo=json-web-tokens&logoColor=white)          | JWT             |
 
-![Node.js](https://img.shields.io/static/v1?label=&message=Node.js&color=339933&logo=nodedotjs&logoColor=white)
-![Express](https://img.shields.io/static/v1?label=&message=Express&color=404D59)
-![TypeScript](https://img.shields.io/static/v1?label=&message=TypeScript&color=007ACC&logo=typescript&logoColor=white)
-![MongoDB](https://img.shields.io/static/v1?label=&message=MongoDB&color=47A248&logo=mongodb&logoColor=white)
-![Bcrypt](https://img.shields.io/static/v1?label=&message=Bcrypt&color=EFCA00)
-![Zod](https://img.shields.io/static/v1?label=&message=Zod&color=2D3748)
-![Nodemailer](https://img.shields.io/static/v1?label=&message=Nodemailer&color=005571&logo=npm&logoColor=white)
-![Multer](https://img.shields.io/static/v1?label=&message=Multer&color=34B7F1)
-![Cloudinary](https://img.shields.io/static/v1?label=&message=Cloudinary&color=3A8E4D)
-![Axios](https://img.shields.io/static/v1?label=&message=Axios&color=5A29E3&logo=axios&logoColor=white)
-![JWT](https://img.shields.io/static/v1?label=&message=JWT&color=000000&logo=json-web-tokens&logoColor=white)
+## 💻 Running locally:
 
-</div>
+To run the this project locally, follow these steps:
+
+### 1. Clone the repository from GitHub:
+
+```sh
+git clone https://github.com/noyonalways/tech-tips-hub-api.git
+```
+
+### 2. Navigate into the project directory:
+
+```sh
+cd tech-tips-hub-api
+```
+
+### 3. Install Dependencies (npm or yarn):
+
+```sh
+npm install
+```
+
+or
+
+```sh
+yarn
+```
+
+### 4. Set up environment variables:
+
+- Create a `.env` file in the root directory.
+- Define necessary environment variables such as database connection URL, PORT, etc. Refer to any provided `.env.example` file or documentation for required variables.
+
+```sh
+# app configuration
+PORT="your_applications_port"
+DATABASE_URL="your_database_connection_url"
+NODE_ENV=development
+JWT_ACCESS_TOKEN_SECRET="your_jwt_access_token_secret"
+JWT_REFRESH_TOKEN_SECRET="your_jwt_refresh_token_secret"
+JWT_ACCESS_TOKEN_EXPIRES_IN="your_jwt_access_token_expiration_duration"
+JWT_REFRESH_TOKEN_EXPIRES_IN="your_jwt_refresh_token_expiration_duration"
+
+# reset password configuration
+JWT_RESET_PASSWORD_SECRET="your_jwt_reset_password_secret"
+JWT_RESET_PASSWORD_EXPIRES_IN="your_jwt_reset_password_expiration_duration"
+RESET_PASSWORD_UI_URL="your_reset_password_ui_url"
+
+# SMTP authentication
+SMTP_AUTH_USER="your_smtp_auth_user_email"
+SMTP_AUTH_PASSWORD="your_smtp_auth_password"
+
+# nodemailer
+NODEMAILER_EMAIL_FROM="your_nodemailer_email"
+
+# hash password
+BCRYPT_SALT_ROUND="bcrypt_salt_round"
+
+# cloudinary configuration
+CLOUD_NAME="your_cloudinary_cloud_name"
+CLOUDINARY_API_KEY="your_cloudinary_api_key"
+CLOUDINARY_API_SECRET="your_cloudinary_api_secret"
+
+# other configuration
+API_BASE_URL="your_applications_api_base_url"
+CLIENT_BASE_URL="your_applications_client_base_url"
+
+AAMARPAY_GATEWAY_BASE_URL="aamarpay_gateway_base_url"
+AAMARPAY_STORE_ID="aamarpay_store_id"
+AAMARPAY_SIGNATURE_KEY="aamarpay_signature_key"
+```
+
+### 4. Run the Application:
+
+```sh
+npm run dev
+```
+
+or
+
+```sh
+yarn dev
+```
 
 ## Contact
 
