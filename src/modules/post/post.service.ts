@@ -575,7 +575,10 @@ const deletePostByAdminUsingId = async (
       throw new AppError(httpStatus.NOT_FOUND, "Post not found");
     }
 
-    const author = await User.findById(post?.author._id).session(session);
+    const author = await User.findByIdAndDelete(post?.author._id, {
+      $inc: { totalPosts: -1 },
+    }).session(session);
+
     if (!author) {
       throw new AppError(httpStatus.NOT_FOUND, "Author not found");
     }
@@ -630,7 +633,10 @@ const deletePostByUserUsingId = async (
   try {
     session.startTransaction();
 
-    const user = await User.findOne({ email: userData.email }).session(session);
+    const user = await User.findOneAndUpdate(
+      { email: userData.email },
+      { $inc: { totalPosts: -1 } },
+    ).session(session);
     if (!user) {
       throw new AppError(httpStatus.NOT_FOUND, "User not found");
     }
@@ -691,6 +697,9 @@ const updatePostByUserUsingId = async (
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
+
+  // Generate unique slug
+  payload.slug = await generateUniqueSlug(payload.title, user.username);
 
   const post = await Post.findOneAndUpdate(
     { _id: postId, author: user._id },
