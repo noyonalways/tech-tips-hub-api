@@ -134,7 +134,6 @@ const commentOnPost = catchAsync(async (req, res) => {
 const getAllCommentsByPostId = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { result, meta } = await postService.getAllCommentsByPostId(
-    req.user,
     id,
     req.query,
   );
@@ -165,6 +164,52 @@ const getAllPostsByUserId = catchAsync(async (req, res) => {
   });
 });
 
+// delete a post by admin using admin
+const deletePostByAdminUsingId = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await postService.deletePostByAdminUsingId(id, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Post deleted successfully",
+    data: result,
+  });
+});
+
+// delete post by user using post id
+const deletePostByUserUsingId = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await postService.deletePostByUserUsingId(req.user, id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Post deleted successfully",
+    data: result,
+  });
+});
+
+// delete post by user using post id
+const updatePostByUserUsingId = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await postService.updatePostByUserUsingId(
+    req.user,
+    id,
+    req.body,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Post updated successfully",
+    data: result,
+  });
+});
+
 export const postController = {
   create,
   getAll,
@@ -177,4 +222,7 @@ export const postController = {
   getAllPostsByUserId,
   getVoteStatus,
   getFollowingUsersPosts,
+  deletePostByAdminUsingId,
+  deletePostByUserUsingId,
+  updatePostByUserUsingId,
 };

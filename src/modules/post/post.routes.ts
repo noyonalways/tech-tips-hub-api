@@ -9,6 +9,7 @@ import { postValidationSchema } from "./post.validation";
 
 const postRouter: Router = Router();
 
+// write a post
 postRouter.post(
   "/",
   auth(USER_ROLE.USER),
@@ -55,6 +56,46 @@ postRouter.get(
   postController.getPremiumSinglePost,
 );
 
+// delete a post by post id;
+postRouter.delete(
+  "/:id/by-admin",
+  auth(USER_ROLE.ADMIN),
+  postController.deletePostByAdminUsingId,
+);
+
+// delete a post by user using post id
+postRouter.delete(
+  "/:id",
+  auth(USER_ROLE.USER),
+  postController.deletePostByUserUsingId,
+);
+
+// update post by user using post id
+
+postRouter.put(
+  "/:id",
+  auth(USER_ROLE.USER),
+  multerUpload.single("image"),
+  (req: Request, _res: Response, next: NextFunction) => {
+    if (req.file?.path) {
+      req.body.data = JSON.stringify({
+        ...JSON.parse(req.body.data),
+        coverImage: req.file.path,
+      });
+    }
+
+    if (typeof req.body.data === "string" && req.body.data.trim()) {
+      req.body = { ...JSON.parse(req.body.data) };
+    } else {
+      req.body = {};
+    }
+
+    next();
+  },
+  validateRequest(postValidationSchema.update),
+  postController.updatePostByUserUsingId,
+);
+
 // vote on post
 postRouter.put("/:id/vote", auth(USER_ROLE.USER), postController.voteOnPost);
 
@@ -95,11 +136,7 @@ postRouter.post(
 );
 
 // get all comments by post id
-postRouter.get(
-  "/:id/comments",
-  auth(USER_ROLE.USER),
-  postController.getAllCommentsByPostId,
-);
+postRouter.get("/:id/comments", postController.getAllCommentsByPostId);
 
 // get all posts by user id
 postRouter.get("/users/:userId", postController.getAllPostsByUserId);

@@ -3,6 +3,7 @@ import { JwtPayload } from "jsonwebtoken";
 import mongoose from "mongoose";
 import { QueryBuilder } from "../../builder";
 import { AppError } from "../../errors";
+import { deleteBlogEmailConfirmation, sendEmail } from "../../utils";
 import Category from "../category/category.model";
 import { IComment } from "../comment/comment.interface";
 import Comment from "../comment/comment.model";
@@ -98,14 +99,15 @@ const getAll = async (query: Record<string, unknown>) => {
   const postQuery = new QueryBuilder(
     Post.find({}).populate("author").populate("category"),
     query,
-  )
-    .search(postSearchableFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).search(postSearchableFields);
 
-  const result = await postQuery.modelQuery;
+  // Await the filter() method
+  await postQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  postQuery.sort().paginate().fields();
+
+  const result = await postQuery.modelQuery; // Await the results here
   const meta = await postQuery.countTotal();
 
   return { result, meta };
@@ -145,14 +147,15 @@ const getFollowingUsersPosts = async (
       .populate("author")
       .populate("category"),
     query,
-  )
-    .search(postSearchableFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).search(postSearchableFields);
 
-  const result = await postQuery.modelQuery;
+  // Await the filter() method
+  await postQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  postQuery.sort().paginate().fields();
+
+  const result = await postQuery.modelQuery; // Await the results here
   const meta = await postQuery.countTotal();
 
   return { result, meta };
@@ -171,14 +174,15 @@ const getLoggedInUserPosts = async (
   const postQuery = new QueryBuilder(
     Post.find({ author: user._id }).populate("author").populate("category"),
     query,
-  )
-    .search(postSearchableFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).search(postSearchableFields);
 
-  const result = await postQuery.modelQuery;
+  // Await the filter() method
+  await postQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  postQuery.sort().paginate().fields();
+
+  const result = await postQuery.modelQuery; // Await the results here
   const meta = await postQuery.countTotal();
 
   return { result, meta };
@@ -500,15 +504,9 @@ const commentOnPost = async (
 
 // get all comments by post id
 const getAllCommentsByPostId = async (
-  userData: JwtPayload,
   postId: string,
   query: Record<string, unknown>,
 ) => {
-  const currentLoggedInUser = await User.findOne({ email: userData.email });
-  if (!currentLoggedInUser) {
-    throw new AppError(httpStatus.NOT_FOUND, "User not found");
-  }
-
   // Fetch the post by its ID
   const post = await Post.findById(postId);
   if (!post) {
@@ -516,23 +514,17 @@ const getAllCommentsByPostId = async (
   }
 
   const commentQuery = new QueryBuilder(
-    Comment.find({ post: post._id })
-      .populate({
-        path: "user",
-        select: "fullName email username profilePicture", // Select only specific user fields
-      })
-      .populate({
-        path: "post",
-        select: "title slug", // Select specific post fields
-      }),
+    Comment.find({ post: post._id }).populate("user").populate("post"),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  );
 
-  const result = await commentQuery.modelQuery;
+  // Await the filter() method
+  await commentQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  commentQuery.sort().paginate().fields();
+
+  const result = await commentQuery.modelQuery; // Await the results here
   const meta = await commentQuery.countTotal();
 
   return { result, meta };
@@ -551,16 +543,175 @@ const getAllPostsByUserId = async (
   const postQuery = new QueryBuilder(
     Post.find({ author: user._id }).populate("author").populate("category"),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).search(postSearchableFields);
 
-  const result = await postQuery.modelQuery;
+  // Await the filter() method
+  await postQuery.filter();
+
+  // Now you can safely call sort, paginate, and fields
+  postQuery.sort().paginate().fields();
+
+  const result = await postQuery.modelQuery; // Await the results here
   const meta = await postQuery.countTotal();
 
   return { result, meta };
+};
+
+// delete post by admin using id
+const deletePostByAdminUsingId = async (
+  id: string,
+  payload: Record<string, string>,
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    // Find the post and populate the author with specific fields
+    const post = await Post.findById(id)
+      .populate({ path: "author", select: "fullName email" })
+      .session(session);
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    const author = await User.findByIdAndDelete(post?.author._id, {
+      $inc: { totalPosts: -1 },
+    }).session(session);
+
+    if (!author) {
+      throw new AppError(httpStatus.NOT_FOUND, "Author not found");
+    }
+
+    // Soft delete the post
+    post.isDeleted = true;
+    await post.save({ session });
+
+    // delete associated comments, views, and votes
+    await Comment.deleteMany({ post: post._id }, { session });
+    await View.deleteMany({ post: post._id }, { session });
+    await Vote.deleteMany({ post: post._id }, { session });
+    await Category.findByIdAndUpdate(
+      post.category,
+      {
+        $inc: { postCount: -1 },
+      },
+      { session },
+    );
+
+    // Commit the transaction
+    await session.commitTransaction();
+    await session.endSession();
+
+    // Send email notification to the author
+    await sendEmail({
+      to: {
+        name: author.fullName,
+        address: author.email,
+      },
+      subject: "Your blog post has been deleted",
+      html: deleteBlogEmailConfirmation(post.title, payload.reason),
+      text: "Your blog post has been deleted",
+    });
+
+    // eslint-disable-next-line no-console
+    console.log("Post soft-deleted, email sent successfully.");
+  } catch (error) {
+    // Abort the transaction in case of an error
+    await session.abortTransaction();
+    await session.endSession();
+    throw error;
+  }
+};
+
+// delete post by user
+const deletePostByUserUsingId = async (
+  userData: JwtPayload,
+  postId: string,
+) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
+    const user = await User.findOneAndUpdate(
+      { email: userData.email },
+      { $inc: { totalPosts: -1 } },
+    ).session(session);
+    if (!user) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    const post = await Post.findOne({ _id: postId, author: user._id }).session(
+      session,
+    );
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Soft delete the post
+    post.isDeleted = true;
+    const result = await post.save({ session });
+
+    // delete associated comments, views, and votes
+    await Comment.deleteMany({ post: post._id }, { session });
+    await View.deleteMany({ post: post._id }, { session });
+    await Vote.deleteMany({ post: post._id }, { session });
+    await Category.findByIdAndUpdate(
+      post.category,
+      {
+        $inc: { postCount: -1 },
+      },
+      { session },
+    );
+
+    // Commit the transaction
+    await session.commitTransaction();
+    await session.endSession();
+
+    // Send email notification to the author
+    // await sendEmail({
+    //   to: {
+    //     name: user.fullName,
+    //     address: user.email,
+    //   },
+    //   subject: "Your blog post has been deleted",
+    //   html: deleteBlogEmailConfirmation(post.title, "User deletion"),
+    //   text: "Your blog post has been deleted",
+    // });
+
+    return result;
+  } catch (err) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw err;
+  }
+};
+
+// update post by user using post id
+const updatePostByUserUsingId = async (
+  userData: JwtPayload,
+  postId: string,
+  payload: IPost,
+) => {
+  const user = await User.findOne({ email: userData.email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // Generate unique slug
+  payload.slug = await generateUniqueSlug(payload.title, user.username);
+
+  const post = await Post.findOneAndUpdate(
+    { _id: postId, author: user._id },
+    { ...payload },
+    { new: true, runValidators: true },
+  );
+
+  if (!post) {
+    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+  }
+
+  return post;
 };
 
 export const postService = {
@@ -575,4 +726,7 @@ export const postService = {
   getAllPostsByUserId,
   getVoteStatus,
   getFollowingUsersPosts,
+  deletePostByAdminUsingId,
+  deletePostByUserUsingId,
+  updatePostByUserUsingId,
 };
