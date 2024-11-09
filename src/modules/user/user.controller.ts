@@ -64,6 +64,7 @@ const blockUser = catchAsync(async (req, res) => {
   });
 });
 
+// unblock user (only admin)
 const unBlockUser = catchAsync(async (req, res) => {
   const { id } = req.params;
 
@@ -73,6 +74,34 @@ const unBlockUser = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     message: "User unblock successfully",
+    data: result,
+  });
+});
+
+// make a user to admin (admin only)
+const makeAdmin = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await userService.makeAdmin(id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User role to Admin successfully",
+    data: result,
+  });
+});
+
+// delete user account (admin only)
+const deleteUserAccount = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await userService.deleteUserAccount(id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User account deleted successfully",
     data: result,
   });
 });
@@ -196,4 +225,6 @@ export const userController = {
   getFollowingByUserId,
   getSingleUserByUsername,
   getFollowStatus,
+  makeAdmin,
+  deleteUserAccount,
 };

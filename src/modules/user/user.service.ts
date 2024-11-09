@@ -2,9 +2,15 @@ import httpStatus from "http-status";
 import { JwtPayload } from "jsonwebtoken";
 import mongoose from "mongoose";
 import { QueryBuilder } from "../../builder";
-import { USER_STATUS } from "../../constant";
+import { USER_ROLE, USER_STATUS } from "../../constant";
 import { AppError } from "../../errors";
+import Comment from "../comment/comment.model";
 import Follower from "../follower/follower.model";
+import Payment from "../payment/payment.model";
+import Post from "../post/post.model";
+import Subscription from "../subscription/subscription.model";
+import View from "../view/view.model";
+import Vote from "../vote/vote.model";
 import { IUser, TSocialLink } from "./user.interface";
 import User from "./user.model";
 
@@ -85,7 +91,7 @@ const blockUser = async (id: string) => {
   }
 
   if (user.status === USER_STATUS.BLOCKED) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User is already blocked");
+    throw new AppError(httpStatus.BAD_REQUEST, "User is already Blocked");
   }
 
   return await User.findByIdAndUpdate(
@@ -111,6 +117,122 @@ const unBlockUser = async (id: string) => {
     { status: USER_STATUS.ACTIVE },
     { new: true, runValidators: true },
   );
+};
+
+// make a user to admin (admin only)
+const makeAdmin = async (id: string) => {
+  const user = await User.findById(id);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is already deleted");
+  }
+
+  if (user.status === USER_STATUS.BLOCKED) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
+  }
+
+  if (user.role === USER_ROLE.ADMIN) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User is already an admin");
+  }
+
+  return await User.findByIdAndUpdate(
+    id,
+    { role: USER_ROLE.ADMIN },
+    { new: true, runValidators: true },
+  );
+};
+
+// delete user account (admin only)
+const deleteUserAccount = async (id: string) => {
+  const user = await User.findById(id);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is already deleted");
+  }
+
+  if (user.status === USER_STATUS.BLOCKED) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
+  }
+
+  if (user.role === USER_ROLE.ADMIN) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Admin users cannot delete accounts",
+    );
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    // 1. Delete user's posts
+    await Post.deleteMany({ author: user._id }, { session });
+
+    // 2. Delete user's comments and decrement totalComments for each post
+    const userComments = await Comment.find({ user: user._id });
+    for (const comment of userComments) {
+      await Post.findByIdAndUpdate(
+        comment.post,
+        { $inc: { totalComments: -1 } },
+        { session },
+      );
+    }
+    await Comment.deleteMany({ user: user._id }, { session });
+
+    // 3. Delete user's views and decrement totalViews for each post
+    const userViews = await View.find({ user: user._id });
+    for (const view of userViews) {
+      await Post.findByIdAndUpdate(
+        view.post,
+        { $inc: { totalViews: -1 } },
+        { session },
+      );
+    }
+    await View.deleteMany({ user: user._id }, { session });
+
+    // 4. Delete user's votes and decrement upVotes or downVotes for each post
+    const userVotes = await Vote.find({ user: user._id });
+    for (const vote of userVotes) {
+      if (vote.type === "upvote") {
+        await Post.findByIdAndUpdate(
+          vote.post,
+          { $inc: { upVotes: -1 } },
+          { session },
+        );
+      } else if (vote.type === "downvote") {
+        await Post.findByIdAndUpdate(
+          vote.post,
+          { $inc: { downVotes: -1 } },
+          { session },
+        );
+      }
+    }
+    await Vote.deleteMany({ user: user._id }, { session });
+
+    // 5. Delete user's followers and following relationships
+    await Follower.deleteMany({ follower: user._id }, { session });
+    await Follower.deleteMany({ following: user._id }, { session });
+
+    // 6. Delete user's payments and subscriptions
+    await Payment.deleteMany({ user: user._id }, { session });
+    await Subscription.deleteMany({ user: user._id }, { session });
+
+    // 7. Mark the user as deleted
+    user.isDeleted = true;
+    await user.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
 };
 
 // Follow a user with transaction
@@ -438,4 +560,6 @@ export const userService = {
   getFollowingByUserId,
   getSingleUserByUsername,
   getFollowStatus,
+  makeAdmin,
+  deleteUserAccount,
 };
