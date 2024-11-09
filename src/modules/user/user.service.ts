@@ -156,10 +156,6 @@ const deleteUserAccount = async (id: string) => {
     throw new AppError(httpStatus.FORBIDDEN, "User is already deleted");
   }
 
-  if (user.status === USER_STATUS.BLOCKED) {
-    throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
-  }
-
   if (user.role === USER_ROLE.ADMIN) {
     throw new AppError(
       httpStatus.FORBIDDEN,

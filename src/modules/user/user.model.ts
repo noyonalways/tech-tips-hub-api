@@ -138,12 +138,16 @@ const userSchema = new Schema<IUser, IUserModel>(
 );
 
 userSchema.pre("find", function (next) {
-  this.find({ isDeleted: { $ne: true } });
+  if (!this.getOptions()?.bypassMiddleware) {
+    this.find({ isDeleted: { $ne: true } });
+  }
   next();
 });
 
 userSchema.pre("findOne", function (next) {
-  this.find({ isDeleted: { $ne: true } });
+  if (!this.getOptions()?.bypassMiddleware) {
+    this.find({ isDeleted: { $ne: true } });
+  }
   next();
 });
 

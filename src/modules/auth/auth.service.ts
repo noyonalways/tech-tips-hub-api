@@ -12,13 +12,32 @@ import User from "../user/user.model";
 
 // register new user
 const register = async (payload: IUser) => {
-  const existedEmail = await User.findOne({ email: payload.email });
+  const existedEmail = await User.findOne({
+    email: payload.email,
+  })
+    .lean()
+    .setOptions({ bypassMiddleware: true });
+
   if (existedEmail) {
+    if (existedEmail.isDeleted) {
+      throw new AppError(
+        409,
+        "Email linked to a deleted account. Recover or try a different email.",
+      );
+    }
     throw new AppError(409, "User already registered");
   }
 
-  const existedUsername = await User.findOne({ username: payload.username });
+  const existedUsername = await User.findOne({ username: payload.username })
+    .lean()
+    .setOptions({ bypassMiddleware: true });
   if (existedUsername) {
+    if (existedUsername.isDeleted) {
+      throw new AppError(
+        409,
+        "Username linked to a deleted account. Recover or try a different username.",
+      );
+    }
     throw new AppError(409, "Username already exists");
   }
 

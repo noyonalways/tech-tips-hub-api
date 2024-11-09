@@ -87,7 +87,7 @@ const makeAdmin = catchAsync(async (req, res) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "User role to Admin successfully",
+    message: "User role updated successfully: User is now an Admin.",
     data: result,
   });
 });
