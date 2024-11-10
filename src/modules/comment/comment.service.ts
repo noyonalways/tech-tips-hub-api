@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import mongoose from "mongoose";
 import { AppError } from "../../errors";
 import Post from "../post/post.model";
+import { IComment } from "./comment.interface";
 import Comment from "./comment.model";
 
 const deleteComment = async (commentId: string) => {
@@ -40,6 +41,18 @@ const deleteComment = async (commentId: string) => {
   }
 };
 
+const updateComment = async (commentId: string, payload: IComment) => {
+  const updatedComment = await Comment.findByIdAndUpdate(commentId, payload, {
+    new: true,
+    runValidators: true,
+  });
+  if (!updatedComment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
+  }
+  return updatedComment;
+};
+
 export const commentService = {
   deleteComment,
+  updateComment,
 };
