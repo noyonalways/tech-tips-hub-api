@@ -66,7 +66,6 @@ const userSchema = new Schema<IUser, IUserModel>(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
       select: 0,
     },
@@ -83,7 +82,6 @@ const userSchema = new Schema<IUser, IUserModel>(
         values: UserGender,
         message: "{VALUE} is not a valid gender",
       },
-      required: [true, "Gender is required"],
     },
     role: {
       type: String,
@@ -115,7 +113,7 @@ const userSchema = new Schema<IUser, IUserModel>(
     },
     dateOfBirth: {
       type: Date,
-      required: [true, "Date of Birth is required"],
+      default: null,
     },
     socialLinks: {
       type: [socialLinksSchema],
@@ -138,12 +136,16 @@ const userSchema = new Schema<IUser, IUserModel>(
 );
 
 userSchema.pre("find", function (next) {
-  this.find({ isDeleted: { $ne: true } });
+  if (!this.getOptions()?.bypassMiddleware) {
+    this.find({ isDeleted: { $ne: true } });
+  }
   next();
 });
 
 userSchema.pre("findOne", function (next) {
-  this.find({ isDeleted: { $ne: true } });
+  if (!this.getOptions()?.bypassMiddleware) {
+    this.find({ isDeleted: { $ne: true } });
+  }
   next();
 });
 

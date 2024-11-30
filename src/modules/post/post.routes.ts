@@ -12,7 +12,7 @@ const postRouter: Router = Router();
 // write a post
 postRouter.post(
   "/",
-  auth(USER_ROLE.USER),
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   multerUpload.single("image"),
   (req: Request, _res: Response, next: NextFunction) => {
     if (req.file?.path) {
@@ -42,7 +42,7 @@ postRouter.get(
 // get all current logged in user posts
 postRouter.get(
   "/my-posts",
-  auth(USER_ROLE.USER),
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   postController.getLoggedInUserPosts,
 );
 
@@ -71,10 +71,9 @@ postRouter.delete(
 );
 
 // update post by user using post id
-
 postRouter.put(
   "/:id",
-  auth(USER_ROLE.USER),
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   multerUpload.single("image"),
   (req: Request, _res: Response, next: NextFunction) => {
     if (req.file?.path) {
@@ -96,8 +95,37 @@ postRouter.put(
   postController.updatePostByUserUsingId,
 );
 
+// update a post by admin
+postRouter.put(
+  "/:id/by-admin",
+  auth(USER_ROLE.ADMIN),
+  multerUpload.single("image"),
+  (req: Request, _res: Response, next: NextFunction) => {
+    if (req.file?.path) {
+      req.body.data = JSON.stringify({
+        ...JSON.parse(req.body.data),
+        coverImage: req.file.path,
+      });
+    }
+
+    if (typeof req.body.data === "string" && req.body.data.trim()) {
+      req.body = { ...JSON.parse(req.body.data) };
+    } else {
+      req.body = {};
+    }
+
+    next();
+  },
+  validateRequest(postValidationSchema.updateByAdmin),
+  postController.updatePostByAdmin,
+);
+
 // vote on post
-postRouter.put("/:id/vote", auth(USER_ROLE.USER), postController.voteOnPost);
+postRouter.put(
+  "/:id/vote",
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  postController.voteOnPost,
+);
 
 // vote status
 postRouter.get(
@@ -109,7 +137,7 @@ postRouter.get(
 // comment on a post
 postRouter.post(
   "/:id/comments",
-  auth(USER_ROLE.USER),
+  auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   multerUpload.array("images"),
   catchAsync((req: Request, _res: Response, next: NextFunction) => {
     if (req.files && req.files.length) {

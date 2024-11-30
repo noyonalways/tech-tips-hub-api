@@ -714,6 +714,32 @@ const updatePostByUserUsingId = async (
   return post;
 };
 
+const updatePostByAdmin = async (
+  postId: string,
+  payload: IPost & { userId: string },
+) => {
+  const user = await User.findById(payload.userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (payload.title) {
+    // Generate unique slug
+    payload.slug = await generateUniqueSlug(payload.title, user.username);
+  }
+
+  const updatedPost = await Post.findByIdAndUpdate(
+    postId,
+    { ...payload },
+    { new: true, runValidators: true },
+  );
+  if (!updatedPost) {
+    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+  }
+
+  return updatedPost;
+};
+
 export const postService = {
   create,
   getAll,
@@ -729,4 +755,5 @@ export const postService = {
   deletePostByAdminUsingId,
   deletePostByUserUsingId,
   updatePostByUserUsingId,
+  updatePostByAdmin,
 };
