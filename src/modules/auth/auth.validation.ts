@@ -55,6 +55,29 @@ const login = z.object({
     .strict(),
 });
 
+const socialLogin = z.object({
+  body: z
+    .object({
+      fullName: z.string({
+        required_error: "Full Name is required",
+        invalid_type_error: "Full Name must be a string",
+      }),
+      email: z
+        .string({
+          required_error: "Email is required",
+          invalid_type_error: "Email must be a string",
+        })
+        .email("Provide a valid email address"),
+      profilePicture: z
+        .string({
+          required_error: "Profile picture is required",
+          invalid_type_error: "Profile Picture must be a string",
+        })
+        .optional(),
+    })
+    .strict(),
+});
+
 const changePassword = z.object({
   body: z
     .object({
@@ -114,6 +137,7 @@ const refreshToken = z.object({
 export const authValidationSchema = {
   register,
   login,
+  socialLogin,
   changePassword,
   forgetPassword,
   resetPassword,

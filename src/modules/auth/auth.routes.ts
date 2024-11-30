@@ -38,6 +38,12 @@ authRoutes.post(
 );
 
 authRoutes.post(
+  "/social-login",
+  validateRequest(authValidationSchema.socialLogin),
+  authController.socialLogin,
+);
+
+authRoutes.post(
   "/refresh-token",
   validateRequest(authValidationSchema.refreshToken),
   authController.generateNewAccessToken,

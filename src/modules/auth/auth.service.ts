@@ -85,6 +85,14 @@ const login = async (payload: IUser) => {
     throw new AppError(404, "User not found");
   }
 
+  if (!user.password) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Incorrect credentials");
+    // throw new AppError(
+    //   httpStatus.UNAUTHORIZED,
+    //   "User register or logged in by social account",
+    // );
+  }
+
   if (!(await User.isPasswordMatch(payload.password, user.password))) {
     throw new AppError(httpStatus.UNAUTHORIZED, "Incorrect credentials");
   }
@@ -97,6 +105,39 @@ const login = async (payload: IUser) => {
     throw new AppError(httpStatus.FORBIDDEN, "User is deleted");
   }
 
+  const jwtPayload = {
+    _id: user._id,
+    profilePicture: user.profilePicture,
+    username: user.username,
+    name: user.fullName,
+    email: user.email,
+    role: user.role,
+    isPremiumUser: user.isPremiumUser,
+  };
+
+  const accessToken = User.createToken(
+    jwtPayload,
+    config.jwt_access_token_secret as string,
+    config.jwt_access_token_expires_in as string,
+  );
+
+  const refreshToken = User.createToken(
+    jwtPayload,
+    config.jwt_refresh_token_secret as string,
+    config.jwt_refresh_token_expires_in as string,
+  );
+
+  return { accessToken, refreshToken };
+};
+
+// social login
+const socialLogin = async (payload: IUser) => {
+  let user = await User.findOne({ email: payload.email });
+  if (!user) {
+    // create a new user (if not found the user by email)
+    payload.username = payload.fullName.toLowerCase().split(" ").join("");
+    user = await register(payload);
+  }
   const jwtPayload = {
     _id: user._id,
     profilePicture: user.profilePicture,
@@ -338,6 +379,7 @@ const generateNewAccessToken = async (refreshToken: string) => {
 export const authService = {
   register,
   login,
+  socialLogin,
   getMe,
   changePassword,
   forgetPassword,
