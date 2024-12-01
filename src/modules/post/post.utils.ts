@@ -8,7 +8,7 @@ export const generateUniqueSlug = async (title: string, username: string) => {
   const baseSlug = slugify(`${title}-${username}`, {
     lower: true,
     trim: true,
-    remove: /[*+~.()'"!:@#$%^&\\]/g,
+    remove: /[*+~.()'"!?:@#$%^&\\]/g,
     replacement: "-",
   });
 
