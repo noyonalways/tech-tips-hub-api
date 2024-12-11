@@ -24,7 +24,7 @@ app.use(
       "https://techtipshub-password-reset.noyonrahman.xyz",
     ],
     credentials: true,
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    methods: "*",
   }),
 );
 app.use(express.json());
