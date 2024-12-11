@@ -112,7 +112,7 @@ const generateNewAccessToken = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Access token retrieved successfully",
-    data: { token: newAccessToken },
+    data: { accessToken: newAccessToken },
   });
 });
 
