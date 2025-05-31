@@ -4,8 +4,8 @@ import Subscription from "../subscription/subscription.model";
 import Post from "./post.model";
 
 // Function to generate slug with potential suffix
-export const generateUniqueSlug = async (title: string, username: string) => {
-  const baseSlug = slugify(`${title}-${username}`, {
+export const generateUniqueSlug = async (title: string) => {
+  const baseSlug = slugify(`${title}`, {
     lower: true,
     trim: true,
     remove: /[*+~.()'"!?:@#$%^&\\]/g,
