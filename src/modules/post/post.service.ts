@@ -38,7 +38,7 @@ const create = async (userData: JwtPayload, payload: IPost) => {
   payload.category = category._id;
 
   // Generate unique slug
-  payload.slug = await generateUniqueSlug(payload.title, user.username);
+  payload.slug = await generateUniqueSlug(payload.title);
 
   const session = await Post.startSession();
 
@@ -575,7 +575,7 @@ const deletePostByAdminUsingId = async (
       throw new AppError(httpStatus.NOT_FOUND, "Post not found");
     }
 
-    const author = await User.findByIdAndDelete(post?.author._id, {
+    const author = await User.findByIdAndUpdate(post?.author._id, {
       $inc: { totalPosts: -1 },
     }).session(session);
 
@@ -699,7 +699,7 @@ const updatePostByUserUsingId = async (
   }
 
   // Generate unique slug
-  payload.slug = await generateUniqueSlug(payload.title, user.username);
+  payload.slug = await generateUniqueSlug(payload.title);
 
   const post = await Post.findOneAndUpdate(
     { _id: postId, author: user._id },
@@ -725,7 +725,7 @@ const updatePostByAdmin = async (
 
   if (payload.title) {
     // Generate unique slug
-    payload.slug = await generateUniqueSlug(payload.title, user.username);
+    payload.slug = await generateUniqueSlug(payload.title);
   }
 
   const updatedPost = await Post.findByIdAndUpdate(
